@@ -150,14 +150,13 @@ async function socketBaglantisiKur() {
         if (sesAcik) sesler.cek.play();
     });
     socket.on('tasAtildiAnimasyonu', (data) => {
+        if (!mevcutOyunDurumu) return;
         const benimIndexim = mevcutOyunDurumu.oyuncular.indexOf(currentUser.username);
         const oyuncuIndex = mevcutOyunDurumu.oyuncular.indexOf(data.oyuncu);
         const oyuncuPozisyonu = (oyuncuIndex - benimIndexim + 4) % 4;
-        const pozisyonMap = ['benim-istaka-alani', 'rakip-alani-sag', 'rakip-alani-ust', 'rakip-alani-sol'];
-        const hedefPozisyonMap = ['benim', 'sag', 'ust', 'sol'];
-
-        const baslangicEl = document.getElementById(pozisyonMap[oyuncuPozisyonu]);
-        const bitisEl = document.getElementById(`deste-alani-${hedefPozisyonMap[oyuncuPozisyonu]}`);
+        
+        const baslangicEl = document.getElementById(['benim-istaka-alani', 'rakip-alani-sag', 'rakip-alani-ust', 'rakip-alani-sol'][oyuncuPozisyonu]);
+        const bitisEl = document.getElementById(['benim', 'sag', 'ust', 'sol'].map(p => `deste-alani-${p}`)[oyuncuPozisyonu]);
         
         if (data.oyuncu !== currentUser.username) {
              tasAnimasyonu(data.tas, baslangicEl, bitisEl);
@@ -314,10 +313,13 @@ function tasiElementeCevir(tas, tıklanabilir) {
     el.dataset.id = tas.id;
     if (tıklanabilir) {
         el.addEventListener('click', () => {
+            if (mevcutOyunDurumu && mevcutOyunDurumu.siraKimde === currentUser.username && benimElim.length % 3 !== 0) {
+                 showToast({tur:'hata', mesaj:'Taş atmak için elinizde fazla taş olmalı!'});
+                 return;
+            }
             if (mevcutOyunDurumu && mevcutOyunDurumu.siraKimde === currentUser.username && benimElim.length % 3 === 0) {
                 const benimIndexim = mevcutOyunDurumu.oyuncular.indexOf(currentUser.username);
-                const pozisyonMap = ['benim', 'sag', 'ust', 'sol'];
-                const hedefEl = document.getElementById(`deste-alani-${pozisyonMap[benimIndexim]}`);
+                const hedefEl = document.getElementById(`deste-alani-${['benim', 'sag', 'ust', 'sol'][benimIndexim]}`);
                 tasAnimasyonu(tas, el, hedefEl);
                 setTimeout(() => socket.emit('tasAt', { tasId: tas.id }), 50);
             }

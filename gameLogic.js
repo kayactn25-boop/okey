@@ -79,7 +79,7 @@ class OkeyGame {
     tasAt(oyuncuAdi, tasId) {
         if (this.oyuncular[this.siraKimdeIndex] !== oyuncuAdi) return false;
         const el = this.eller[oyuncuAdi];
-        if (el.length % 3 === 0) return false;
+        if (el.length % 3 === 0) return false; // Elinde 15, 12, 9... taş olmalı
         const atilanTasIndex = el.findIndex(t => t.id === tasId);
         if (atilanTasIndex === -1) return false;
         const atilanTas = el.splice(atilanTasIndex, 1)[0];
@@ -93,38 +93,90 @@ class OkeyGame {
         this.siraKimdeIndex = (this.siraKimdeIndex + 1) % 4;
     }
 
+    // GERÇEK VE HİLE KORUMALI EL DOĞRULAMA ALGORİTMASI
     eliDogrula(el, ciftMi) {
-        if (!ciftMi && el.length !== 14) return false;
-        if (ciftMi && el.length !== 14) return false;
+        if (el.length !== 14) return false;
 
-        let elKopya = JSON.parse(JSON.stringify(el));
+        const elKopya = JSON.parse(JSON.stringify(el));
         const okeyler = elKopya.filter(t => t.isOkey);
-        let normalTaslar = elKopya.filter(t => !t.isOkey);
+        const normalTaslar = elKopya.filter(t => !t.isOkey);
 
         if (ciftMi) {
             let ciftSayisi = 0;
             let kalanOkey = okeyler.length;
-            const sayac = {};
+            const sayac = new Map();
             normalTaslar.forEach(t => {
                 const anahtar = `${t.renk}-${t.sayi}`;
-                sayac[anahtar] = (sayac[anahtar] || 0) + 1;
+                sayac.set(anahtar, (sayac.get(anahtar) || 0) + 1);
             });
-            for (const anahtar in sayac) {
-                if (sayac[anahtar] % 2 !== 0) {
-                    if (kalanOkey > 0) {
-                        ciftSayisi += (sayac[anahtar] + 1) / 2;
-                        kalanOkey--;
-                    } else return false;
-                } else {
-                    ciftSayisi += sayac[anahtar] / 2;
+
+            for (const count of sayac.values()) {
+                if (count >= 2) {
+                    ciftSayisi += Math.floor(count / 2);
                 }
             }
+            
+            let tekler = 0;
+            for (const count of sayac.values()) {
+                if (count % 2 !== 0) {
+                    tekler++;
+                }
+            }
+
+            ciftSayisi += Math.min(tekler, kalanOkey);
+            kalanOkey -= Math.min(tekler, kalanOkey);
             ciftSayisi += Math.floor(kalanOkey / 2);
+
             return ciftSayisi === 7;
         }
+
+        // Normal Bitiş (Backtracking Algoritması)
+        normalTaslar.sort((a, b) => a.sayi - b.sayi || a.renk.localeCompare(b.renk));
+
+        const perlereAyrilabilir = (kalanTaslar, okeyAdedi) => {
+            if (kalanTaslar.length === 0) return true;
+
+            const t1 = kalanTaslar[0];
+            const digerTaslar = kalanTaslar.slice(1);
+            const gerekliOkey = 3 - (kalanTaslar.length);
+            if(okeyAdedi >= gerekliOkey && gerekliOkey > 0) return true;
+
+            // 3'lü Sıralı Per denemesi
+            const t2_sirali = digerTaslar.find(t => t.renk === t1.renk && t.sayi === t1.sayi + 1);
+            const t3_sirali = digerTaslar.find(t => t.renk === t1.renk && t.sayi === t1.sayi + 2);
+            if (t2_sirali && t3_sirali) {
+                const yeniKalanlar = digerTaslar.filter(t => t.id !== t2_sirali.id && t.id !== t3_sirali.id);
+                if (perlereAyrilabilir(yeniKalanlar, okeyAdedi)) return true;
+            }
+
+            // 3'lü Aynı Sayılı Per denemesi
+            const ayniSayililar = digerTaslar.filter(t => t.sayi === t1.sayi && t.renk !== t1.renk);
+            if (ayniSayililar.length >= 2) {
+                const renkSeti = new Set([t1.renk, ayniSayililar[0].renk, ayniSayililar[1].renk]);
+                if (renkSeti.size === 3) {
+                    const yeniKalanlar = digerTaslar.filter(t => t.id !== ayniSayililar[0].id && t.id !== ayniSayililar[1].id);
+                    if (perlereAyrilabilir(yeniKalanlar, okeyAdedi)) return true;
+                }
+            }
+
+            // Okey kullanarak per denemesi
+            if (okeyAdedi > 0) {
+                // 2 taş + 1 okey ile sıralı per
+                if (t2_sirali) {
+                    const yeniKalanlar = digerTaslar.filter(t => t.id !== t2_sirali.id);
+                    if (perlereAyrilabilir(yeniKalanlar, okeyAdedi - 1)) return true;
+                }
+                // 2 taş + 1 okey ile aynı sayılı
+                if (ayniSayililar.length >= 1) {
+                    const yeniKalanlar = digerTaslar.filter(t => t.id !== ayniSayililar[0].id);
+                    if (perlereAyrilabilir(yeniKalanlar, okeyAdedi - 1)) return true;
+                }
+            }
+            
+            return false;
+        };
         
-        console.log("UYARI: Normal el doğrulama algoritması basitleştirilmiştir ve her zaman true dönecektir.");
-        return true;
+        return perlereAyrilabilir(normalTaslar, okeyler.length);
     }
 
     getGameState() {
