@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Okey Salonu</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div id="oyun-alani">
+            <h1>Okey Salonu - Lobi</h1>
+            <p>Oda kurmak veya bir odaya katılmak için yandaki menüyü kullanın.</p>
+        </div>
+        <div id="yan-panel">
+            <div id="oda-yonetimi">
+                <h2>Odalar</h2>
+                <div id="oda-kur-formu">
+                    <input type="text" id="oda-adi-input" placeholder="Oda Adı Girin..." maxlength="20">
+                    <button id="oda-kur-btn">Oda Kur</button>
+                </div>
+                <ul id="oda-listesi">
+                    </ul>
+            </div>
+
+            <h2>Online Oyuncular</h2>
+            <ul id="online-kullanicilar-listesi">
+                </ul>
+        </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="client.js"></script>
+</body>
+</html>
