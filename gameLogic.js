@@ -1,64 +1,71 @@
-// Okey oyununun durumunu ve kurallarını yöneten sınıf
 class OkeyGame {
     constructor(oyuncular) {
-        this.oyuncular = oyuncular; // ['Ali', 'Veli', 'Ayşe', 'Fatma']
-        this.deste = this.desteOlustur();
-        this.eller = {}; // { 'Ali': [...], 'Veli': [...] }
+        this.oyuncular = oyuncular;
+        this.deste = this.desteOlusturVeKaristir();
+        this.eller = {};
         this.gosterge = null;
         this.okeyTasi = null;
-        this.siraKimde = 0; // Oyuncular dizisindeki index
+        this.siraKimdeIndex = 0;
+        this.ortaDeste = [];
     }
 
-    // 106 adet okey taşını oluşturan ve karıştıran fonksiyon
-    desteOlustur() {
+    desteOlusturVeKaristir() {
         const renkler = ['sari', 'mavi', 'siyah', 'kirmizi'];
         let deste = [];
-        // 1'den 13'e kadar renkli taşları oluştur (her birinden 2'şer adet)
         renkler.forEach(renk => {
             for (let i = 1; i <= 13; i++) {
-                deste.push({ renk: renk, sayi: i, id: `${renk}-${i}-1` });
-                deste.push({ renk: renk, sayi: i, id: `${renk}-${i}-2` });
+                deste.push({ renk, sayi: i, id: `${renk}-${i}-1` });
+                deste.push({ renk, sayi: i, id: `${renk}-${i}-2` });
             }
         });
-        // 2 adet sahte okeyi ekle
         deste.push({ renk: 'sahte', sayi: 0, id: 'sahte-okey-1' });
         deste.push({ renk: 'sahte', sayi: 0, id: 'sahte-okey-2' });
         
-        console.log('Deste oluşturuldu. Toplam taş sayısı:', deste.length);
-        
-        return this.desteKaristir(deste);
-    }
-
-    // Fisher-Yates (Knuth) Karıştırma Algoritması
-    desteKaristir(deste) {
-        letcurrentIndex = deste.length, randomIndex;
-        while (currentIndex !== 0) {
-            randomIndex = Math.floor(Math.random() * currentIndex);
-            currentIndex--;
-            [deste[currentIndex], deste[randomIndex]] = [deste[randomIndex], deste[currentIndex]];
+        for (let i = deste.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [deste[i], deste[j]] = [deste[j], deste[i]];
         }
-        console.log('Deste karıştırıldı.');
         return deste;
     }
 
-    // Oyunculara taşları dağıtan fonksiyon
+    okeyBelirle() {
+        // Normal bir taş bulana kadar desteden çek
+        let gostergeAdayi = null;
+        let denemeIndex = 0;
+        do {
+            gostergeAdayi = this.deste[denemeIndex];
+            denemeIndex++;
+        } while (gostergeAdayi.renk === 'sahte');
+        
+        this.gosterge = gostergeAdayi;
+
+        let okeySayi = this.gosterge.sayi + 1;
+        let okeyRenk = this.gosterge.renk;
+
+        if (okeySayi > 13) {
+            okeySayi = 1;
+        }
+        
+        this.okeyTasi = { renk: okeyRenk, sayi: okeySayi };
+        console.log(`GÖSTERGE: ${this.gosterge.renk} ${this.gosterge.sayi} -> OKEY: ${this.okeyTasi.renk} ${this.okeyTasi.sayi}`);
+    }
+
     taslariDagit() {
-        // Rastgele bir başlangıç oyuncusu seç
-        this.siraKimde = Math.floor(Math.random() * 4);
-        const baslangicOyuncusu = this.oyuncular[this.siraKimde];
-        console.log(`Oyun başlıyor. İlk oyuncu: ${baslangicOyuncusu}`);
+        this.okeyBelirle();
+
+        this.siraKimdeIndex = Math.floor(Math.random() * 4);
+        const baslangicOyuncusu = this.oyuncular[this.siraKimdeIndex];
+        console.log(`İlk oyuncu (${this.siraKimdeIndex}): ${baslangicOyuncusu}`);
 
         this.oyuncular.forEach(oyuncu => {
             const tasSayisi = (oyuncu === baslangicOyuncusu) ? 15 : 14;
-            this.eller[oyuncu] = []; // Oyuncunun elini boşalt
-            for (let i = 0; i < tasSayisi; i++) {
-                this.eller[oyuncu].push(this.deste.pop());
-            }
+            this.eller[oyuncu] = this.deste.splice(0, tasSayisi);
         });
-        console.log('Taşlar dağıtıldı.');
-        return this.eller;
+
+        // Kalan taşları orta desteye ata
+        this.ortaDeste = this.deste;
+        console.log('Taşlar dağıtıldı. Ortada kalan taş:', this.ortaDeste.length);
     }
 }
 
-// Bu sınıfı server.js'de kullanabilmek için export ediyoruz
 module.exports = OkeyGame;

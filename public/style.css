@@ -20,26 +20,26 @@ h2 { margin-top: 0; border-bottom: 1px solid #ddd; padding-bottom: 10px; font-si
 .oyun-masasi { display: flex; flex-direction: column; align-items: center; }
 .masa-ortasi { display: flex; justify-content: space-between; width: 100%; align-items: center; }
 #orta-desteler { width: 400px; height: 200px; background-color: #004d00; border: 2px dashed rgba(255,255,255,0.4); border-radius: 10px; display: flex; justify-content: center; align-items: center; font-size: 1.5em; font-weight: bold; }
-.oyuncu-alani { padding: 15px; background-color: rgba(0,0,0,0.3); border-radius: 8px; text-align: center; min-width: 150px; margin: 10px; }
+.oyuncu-alani { padding: 15px; background-color: rgba(0,0,0,0.3); border-radius: 8px; text-align: center; min-width: 150px; margin: 10px; border: 3px solid transparent; transition: border-color 0.3s; }
 #mevcut-oyuncu-istakasi { margin-top: 20px; padding: 10px; background-color: #8B4513; border-radius: 10px; min-height: 100px; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 5px; }
-
-/* ========= YENİ TAŞ STİLLERİ ========= */
-.tas {
-    width: 40px;
-    height: 60px;
-    background-color: #f2e5c3; /* Krem rengi */
-    border: 1px solid #333;
-    border-radius: 4px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 24px;
-    font-weight: bold;
-    cursor: pointer;
-    user-select: none;
-}
+.tas { width: 40px; height: 60px; background-color: #f2e5c3; border: 1px solid #333; border-radius: 4px; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; cursor: pointer; user-select: none; }
 .tas-sari { color: #f5b000; }
 .tas-mavi { color: #007bff; }
 .tas-siyah { color: #212529; }
 .tas-kirmizi { color: #dc3545; }
 .tas-sahte { color: #28a745; }
+
+/* YENİ EKLENEN STİLLER */
+#gosterge-alani {
+    width: 60px;
+    height: 80px;
+    background-color: rgba(0,0,0,0.2);
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.aktif-sira {
+    border-color: #ffc107; /* Sarı vurgu rengi */
+    box-shadow: 0 0 15px #ffc107;
+}
