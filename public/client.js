@@ -1,10 +1,8 @@
-// Sunucunun canlı adresi. Burası çok önemli!
 const sunucuAdresi = "https://okey-1.onrender.com";
 const socket = io(sunucuAdresi);
 
 // Kullanıcıdan bir isim alıyoruz
 const kullaniciAdi = prompt("Lütfen kullanıcı adınızı girin:");
-
 if (kullaniciAdi && kullaniciAdi.trim() !== "") {
     socket.emit('yeniKullaniciGeldi', kullaniciAdi);
 } else {
@@ -18,12 +16,20 @@ const odaListesiElementi = document.getElementById('oda-listesi');
 const odaAdiInput = document.getElementById('oda-adi-input');
 const odaKurBtn = document.getElementById('oda-kur-btn');
 
-// "Oda Kur" butonuna tıklandığında
+// "Oda Kur" butonuna tıklandığında sunucuya haber ver
 odaKurBtn.addEventListener('click', () => {
     const odaAdi = odaAdiInput.value.trim();
     if (odaAdi) {
-        socket.emit('odaKur', odaAdi); // Sunucuya 'odaKur' olayını, oda adıyla birlikte gönder
-        odaAdiInput.value = ''; // Input'u temizle
+        socket.emit('odaKur', odaAdi);
+        odaAdiInput.value = '';
+    }
+});
+
+// "Katıl" butonlarına tıklandığında (Event Delegation ile)
+odaListesiElementi.addEventListener('click', (event) => {
+    if (event.target.classList.contains('katil-btn')) {
+        const odaAdi = event.target.dataset.odaAdi;
+        socket.emit('odayaKatil', odaAdi);
     }
 });
 
@@ -42,9 +48,14 @@ socket.on('odaListesiGuncelle', (guncelOdalar) => {
     odaListesiElementi.innerHTML = '';
     guncelOdalar.forEach(oda => {
         const li = document.createElement('li');
+        // Oda doluysa "Katıl" butonunu pasif yap (isteğe bağlı)
+        const katilButonuHTML = oda.oyuncular.length >= 4 
+            ? '<button disabled>Dolu</button>' 
+            : `<button class="katil-btn" data-oda-adi="${oda.adi}">Katıl</button>`;
+
         li.innerHTML = `
             <span>${oda.adi} (${oda.oyuncular.length}/4)</span>
-            <button class="katil-btn" data-oda-adi="${oda.adi}">Katıl</button>
+            ${katilButonuHTML}
         `;
         odaListesiElementi.appendChild(li);
     });
