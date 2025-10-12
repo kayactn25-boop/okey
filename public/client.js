@@ -30,7 +30,7 @@ loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(loginForm).entries());
     const response = await apiIstegi('/login', 'POST', data);
-    if (response.user) {
+    if (response && response.user) {
         currentUser = response.user;
         showToast({ tur: 'basari', mesaj: response.message });
         socketBaglantisiKur();
@@ -42,7 +42,6 @@ registerForm.addEventListener('submit', async (e) => {
     const response = await apiIstegi('/register', 'POST', data);
     if (response) {
         showToast({ tur: 'basari', mesaj: response.message });
-        // Otomatik olarak giriş sekmesine geç
         document.querySelector('.sekme-btn[data-form="login-form"]').click();
         loginForm.querySelector('input[name="username"]').value = data.username;
     }
@@ -65,22 +64,39 @@ async function apiIstegi(endpoint, method, body) {
         return null;
     }
 }
-function socketBaglantisiKur() {
+async function socketBaglantisiKur() {
     socket = io(sunucuAdresi);
-    socket.on('connect', () => {
+    socket.on('connect', async () => {
         console.log('Sunucuya bağlandı!');
         socket.emit('yeniKullaniciGeldi', currentUser);
         girisEkrani.classList.add('hidden');
         lobiEkrani.classList.remove('hidden');
+        const leaderboard = await apiIstegi('/leaderboard', 'GET');
+        if (leaderboard) {
+            const leaderboardBody = document.getElementById('leaderboard-body');
+            leaderboardBody.innerHTML = '';
+            leaderboard.forEach((user, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${index + 1}</td><td>${user.kullanici_adi}</td><td>${user.skor}</td>`;
+                leaderboardBody.appendChild(tr);
+            });
+        }
     });
-    // Tüm socket dinleyicilerini buraya taşı
+    
     socket.on('odaListesiGuncelle', (guncelOdalar) => {
         const odaListesiElementi = document.getElementById('oda-listesi');
         odaListesiElementi.innerHTML = '';
         guncelOdalar.forEach(oda => {
             const li = document.createElement('li');
+            li.className = 'oda-item';
             const katilButonuHTML = oda.oyuncular.length >= 4 ? '<button disabled>Dolu</button>' : `<button class="katil-btn" data-oda-adi="${oda.adi}">Katıl</button>`;
-            li.innerHTML = `<span>${oda.adi} (${oda.oyuncular.length}/4) - Kurucu: ${oda.kurucu}</span>${katilButonuHTML}`;
+            li.innerHTML = `
+                <div class="oda-bilgisi-lobi">
+                    <span>${oda.adi} (${oda.oyuncular.length}/4)</span>
+                    <small>Kurucu: ${oda.kurucu}</small>
+                </div>
+                ${katilButonuHTML}
+            `;
             odaListesiElementi.appendChild(li);
         });
     });
@@ -123,10 +139,29 @@ function socketBaglantisiKur() {
         document.getElementById('hazir-btn').classList.add('hidden');
         document.getElementById('perleri-grupla-btn').classList.remove('hidden');
     });
-    socket.on('tasCekildi', (cekilenTas) => {
-        benimElim.push(cekilenTas);
-        istakayiCiz(false);
+    socket.on('tasCekildi', (data) => {
+        const baslangicEl = document.getElementById(data.kaynak);
+        const bitisEl = document.getElementById('mevcut-oyuncu-istakasi');
+        tasAnimasyonu(data.tas, baslangicEl, bitisEl);
+        setTimeout(() => {
+            benimElim.push(data.tas);
+            istakayiCiz(false);
+        }, 300);
         if (sesAcik) sesler.cek.play();
+    });
+    socket.on('tasAtildiAnimasyonu', (data) => {
+        const benimIndexim = mevcutOyunDurumu.oyuncular.indexOf(currentUser.username);
+        const oyuncuIndex = mevcutOyunDurumu.oyuncular.indexOf(data.oyuncu);
+        const oyuncuPozisyonu = (oyuncuIndex - benimIndexim + 4) % 4;
+        const pozisyonMap = ['benim-istaka-alani', 'rakip-alani-sag', 'rakip-alani-ust', 'rakip-alani-sol'];
+        const hedefPozisyonMap = ['benim', 'sag', 'ust', 'sol'];
+
+        const baslangicEl = document.getElementById(pozisyonMap[oyuncuPozisyonu]);
+        const bitisEl = document.getElementById(`deste-alani-${hedefPozisyonMap[oyuncuPozisyonu]}`);
+        
+        if (data.oyuncu !== currentUser.username) {
+             tasAnimasyonu(data.tas, baslangicEl, bitisEl);
+        }
     });
     socket.on('oyunDurumuGuncelle', (gameState) => {
         const siraBendeMiydi = mevcutOyunDurumu && mevcutOyunDurumu.siraKimde === currentUser.username;
@@ -136,7 +171,7 @@ function socketBaglantisiKur() {
         if (siraSimdiBendeMi && !siraBendeMiydi) {
             showToast({ tur: 'bilgi', mesaj: 'Sıra sizde!' });
         }
-        if (!siraBendeMiydi && !siraSimdiBendeMi && sesAcik) {
+        if(!siraBendeMiydi && !siraSimdiBendeMi && sesAcik) {
             sesler.at.play();
         }
     });
@@ -166,7 +201,6 @@ function socketBaglantisiKur() {
     socket.on('toastBildirimi', showToast);
 }
 
-// Lobi Eventleri
 document.getElementById('oda-kur-btn').addEventListener('click', () => {
     const odaAdi = document.getElementById('oda-adi-input').value.trim();
     if (odaAdi) socket.emit('odaKur', odaAdi);
@@ -177,17 +211,16 @@ document.getElementById('oda-listesi').addEventListener('click', (event) => {
         socket.emit('odayaKatil', event.target.dataset.odaAdi);
     }
 });
-
 function oyunArayuzuOlaylariniBaslat() {
-    document.getElementById('orta-deste').addEventListener('click', () => {
+    document.getElementById('orta-deste').addEventListener('click', (e) => {
         if (mevcutOyunDurumu && mevcutOyunDurumu.siraKimde === currentUser.username && benimElim.length % 3 !== 0) {
-            socket.emit('ortadanCek');
+            socket.emit('ortadanCek', { kaynak: 'orta-deste' });
         }
     });
     document.getElementById('ana-oyun-alani').addEventListener('click', (event) => {
         const hedef = event.target.closest('.yan-deste');
         if (hedef && hedef.classList.contains('aktif-hedef') && mevcutOyunDurumu.siraKimde === currentUser.username && benimElim.length % 3 !== 0) {
-            socket.emit('yandanCek');
+            socket.emit('yandanCek', { kaynak: hedef.id });
         }
     });
     document.getElementById('sohbet-gonder-btn').addEventListener('click', mesajGonder);
@@ -202,7 +235,10 @@ function oyunArayuzuOlaylariniBaslat() {
         document.getElementById('hazir-btn').disabled = true;
         document.getElementById('hazir-btn').textContent = 'Bekleniyor...';
     });
-    document.getElementById('tema-btn').addEventListener('click', () => document.body.classList.toggle('dark-mode'));
+    document.getElementById('tema-btn').addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        document.getElementById('tema-btn').innerHTML = document.body.classList.contains('dark-mode') ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+    });
     document.getElementById('ses-btn').addEventListener('click', () => {
         sesAcik = !sesAcik;
         document.getElementById('ses-btn').innerHTML = sesAcik ? '<i class="fa-solid fa-volume-high"></i>' : '<i class="fa-solid fa-volume-xmark"></i>';
@@ -253,7 +289,6 @@ function istakayiCiz(sirala = false, grupla = false) {
     
     benimElim.forEach(tas => {
         const tasElementi = tasiElementeCevir(tas, true);
-        tasElementi.dataset.id = tas.id;
         istakaElementi.appendChild(tasElementi);
     });
     
@@ -280,8 +315,11 @@ function tasiElementeCevir(tas, tıklanabilir) {
     if (tıklanabilir) {
         el.addEventListener('click', () => {
             if (mevcutOyunDurumu && mevcutOyunDurumu.siraKimde === currentUser.username && benimElim.length % 3 === 0) {
-                if (sesAcik) sesler.at.play();
-                socket.emit('tasAt', tas.id);
+                const benimIndexim = mevcutOyunDurumu.oyuncular.indexOf(currentUser.username);
+                const pozisyonMap = ['benim', 'sag', 'ust', 'sol'];
+                const hedefEl = document.getElementById(`deste-alani-${pozisyonMap[benimIndexim]}`);
+                tasAnimasyonu(tas, el, hedefEl);
+                setTimeout(() => socket.emit('tasAt', { tasId: tas.id }), 50);
             }
         });
     }
@@ -295,21 +333,23 @@ function bitmeIstegiGonder(ciftMi) {
     const istakaElementi = document.getElementById('mevcut-oyuncu-istakasi');
     const guncelSira = Array.from(istakaElementi.querySelectorAll('.tas')).map(el => el.dataset.id);
     const siraliEl = [...benimElim].sort((a, b) => guncelSira.indexOf(a.id) - guncelSira.indexOf(b.id));
+
     const bitisKosulu = (ciftMi && siraliEl.length === 14) || (!ciftMi && siraliEl.length === 15);
     if (!bitisKosulu) { showToast({tur: 'hata', mesaj: 'El sayısı bitiş için uygun değil!'}); return; }
     
     if (!ciftMi) {
         const atilacakTas = siraliEl.pop();
-        socket.emit('bitmeIstegi', { el: siraliEl, ciftMi: ciftMi, atilacakTasId: atilacakTas.id });
+        socket.emit('bitmeIstegi', { el: siraliEl, ciftMi: ciftMi, atilacakTasId: atilacakTas.id, okeyMiAtti: atilacakTas.isOkey });
     } else {
-        socket.emit('bitmeIstegi', { el: siraliEl, ciftMi: ciftMi, atilacakTasId: null });
+        socket.emit('bitmeIstegi', { el: siraliEl, ciftMi: ciftMi, atilacakTasId: null, okeyMiAtti: false });
     }
 }
 function showToast(data) {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
     toast.className = `toast toast-${data.tur || 'bilgi'}`;
-    toast.innerHTML = `<i class="fa-solid fa-circle-info"></i> ${data.mesaj}`;
+    const iconMap = { 'hata': 'fa-circle-xmark', 'basari': 'fa-circle-check', 'bilgi': 'fa-circle-info' };
+    toast.innerHTML = `<i class="fa-solid ${iconMap[data.tur] || 'fa-circle-info'}"></i> ${data.mesaj}`;
     container.appendChild(toast);
     setTimeout(() => toast.classList.add('show'), 10);
     setTimeout(() => {
@@ -327,4 +367,22 @@ function renkUret(str) {
     }
     return color;
 }
-function konfetiYagdir() { /* Bu fonksiyon isteğe bağlı olarak doldurulabilir */ }
+function tasAnimasyonu(tasData, baslangicEl, bitisEl) {
+    if (!baslangicEl || !bitisEl) return;
+    const tasElementi = tasiElementeCevir(tasData, false);
+    tasElementi.classList.add('tas-ucusu');
+    document.body.appendChild(tasElementi);
+    const baslangicRect = baslangicEl.getBoundingClientRect();
+    const bitisRect = bitisEl.getBoundingClientRect();
+    tasElementi.style.left = `${baslangicRect.left + (baslangicRect.width / 2) - 20}px`;
+    tasElementi.style.top = `${baslangicRect.top + (baslangicRect.height / 2) - 30}px`;
+    requestAnimationFrame(() => {
+        tasElementi.style.left = `${bitisRect.left + (bitisRect.width / 2) - 20}px`;
+        tasElementi.style.top = `${bitisRect.top + (bitisRect.height / 2) - 30}px`;
+        tasElementi.style.transform = 'scale(1)';
+    });
+    setTimeout(() => {
+        if(document.body.contains(tasElementi)) document.body.removeChild(tasElementi);
+    }, 500);
+}
+function konfetiYagdir() { /* Boş fonksiyon */ }

@@ -94,8 +94,8 @@ class OkeyGame {
     }
 
     eliDogrula(el, ciftMi) {
-        const tasSayisiGecerli = (ciftMi && el.length === 14) || (!ciftMi && el.length === 14);
-        if (!tasSayisiGecerli) return false;
+        if (!ciftMi && el.length !== 14) return false;
+        if (ciftMi && el.length !== 14) return false;
 
         let elKopya = JSON.parse(JSON.stringify(el));
         const okeyler = elKopya.filter(t => t.isOkey);
@@ -123,11 +123,15 @@ class OkeyGame {
             return ciftSayisi === 7;
         }
         
-        console.log("UYARI: Normal el doğrulama algoritması hala basitleştirilmiş bir versiyondur.");
+        console.log("UYARI: Normal el doğrulama algoritması basitleştirilmiştir ve her zaman true dönecektir.");
         return true;
     }
 
     getGameState() {
+        let oyuncuElSayilari = {};
+        this.oyuncular.forEach(p => {
+            oyuncuElSayilari[p] = this.eller[p] ? this.eller[p].length : 0;
+        });
         return {
             oyuncular: this.oyuncular,
             siraKimde: this.oyuncular[this.siraKimdeIndex],
@@ -136,7 +140,8 @@ class OkeyGame {
             okeyTasi: this.okeyTasi,
             ortaDesteSayisi: this.ortaDeste.length,
             sonAtilanTas: this.sonAtilanTas,
-            hazirOyuncular: Array.from(this.hazirOyuncular)
+            hazirOyuncular: Array.from(this.hazirOyuncular),
+            oyuncuElSayilari: oyuncuElSayilari
         };
     }
 }

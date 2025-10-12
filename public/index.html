@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Okey Platin</title>
+    <title>Okey Ustalık</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet"/>
@@ -14,7 +14,7 @@
 <body>
     <div id="giris-ekrani">
         <div class="giris-kutusu">
-            <h1>Okey Platin</h1>
+            <h1>Okey Ustalık</h1>
             <div class="form-sekmeleri">
                 <button class="sekme-btn aktif" data-form="login-form">Giriş Yap</button>
                 <button class="sekme-btn" data-form="register-form">Kayıt Ol</button>
@@ -37,10 +37,6 @@
     
     <div id="lobi-ekrani" class="hidden">
         <div class="lobi-container">
-            <div class="lobi-oyun-alani">
-                <h1>Okey Salonu - Lobi</h1>
-                <p>Oda kurmak veya bir odaya katılmak için yandaki menüyü kullanın.</p>
-            </div>
             <div class="lobi-yan-panel">
                 <div class="lobi-bolum">
                     <h2>Odalar</h2>
@@ -55,6 +51,21 @@
                     <ul id="online-kullanicilar-listesi"></ul>
                 </div>
             </div>
+            <div class="lobi-oyun-alani">
+                <h1>Liderlik Tablosu</h1>
+                <div id="leaderboard">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Oyuncu</th>
+                                <th>Skor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-body"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -65,8 +76,8 @@
                 <span id="gosterge-bilgisi"></span>
             </div>
             <div class="oyun-kontrolleri">
-                <button id="tema-btn" class="kontrol-btn"><i class="fa-solid fa-moon"></i></button>
-                <button id="ses-btn" class="kontrol-btn"><i class="fa-solid fa-volume-high"></i></button>
+                <button id="tema-btn" class="kontrol-btn" title="Tema Değiştir"><i class="fa-solid fa-moon"></i></button>
+                <button id="ses-btn" class="kontrol-btn" title="Sesi Aç/Kapat"><i class="fa-solid fa-volume-high"></i></button>
             </div>
         </div>
         <div id="oyun-alani-wrapper">
@@ -127,9 +138,9 @@
     <canvas id="konfeti-canvas"></canvas>
     <div id="toast-container"></div>
 
-    <audio id="ses-cek" src="/sounds/cek.mp3"></audio>
-    <audio id="ses-at" src="/sounds/at.mp3"></audio>
-    <audio id="ses-kazan" src="/sounds/kazan.mp3"></audio>
+    <audio id="ses-cek" src="/sounds/cek.mp3" preload="auto"></audio>
+    <audio id="ses-at" src="/sounds/at.mp3" preload="auto"></audio>
+    <audio id="ses-kazan" src="/sounds/kazan.mp3" preload="auto"></audio>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="client.js"></script>
