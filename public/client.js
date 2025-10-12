@@ -1,128 +1,125 @@
 const sunucuAdresi = "https://okey-1.onrender.com";
 const socket = io(sunucuAdresi);
 
-const kullaniciAdi = prompt("Lütfen kullanıcı adınızı girin:");
-if (kullaniciAdi && kullaniciAdi.trim() !== "") {
-    socket.emit('yeniKullaniciGeldi', kullaniciAdi);
-} else {
-    alert("Kullanıcı adı girmelisiniz!");
-    document.body.innerHTML = '<h1>Lütfen sayfayı yenileyip bir kullanıcı adı girin.</h1>';
-}
+let benimKullaniciAdim = "";
+let benimElim = [];
+let mevcutOyunDurumu = null;
 
 // HTML Elementleri
 const lobiEkrani = document.getElementById('lobi-ekrani');
 const oyunOdasiEkrani = document.getElementById('oyun-odasi-ekrani');
-const kullaniciListesiElementi = document.getElementById('online-kullanicilar-listesi');
-const odaListesiElementi = document.getElementById('oda-listesi');
-const odaAdiInput = document.getElementById('oda-adi-input');
-const odaKurBtn = document.getElementById('oda-kur-btn');
-const odaAdiBaslik = document.getElementById('oda-adi-baslik');
-const benimIstakamElementi = document.getElementById('mevcut-oyuncu-istakasi');
-const gostergeAlani = document.getElementById('gosterge-alani');
+// ... Diğer lobi elementleri
 
-// Lobi Eventleri
-odaKurBtn.addEventListener('click', () => {
-    const odaAdi = odaAdiInput.value.trim();
-    if (odaAdi) socket.emit('odaKur', odaAdi);
-    odaAdiInput.value = '';
-});
+// Başlangıç
+benimKullaniciAdim = prompt("Lütfen kullanıcı adınızı girin:");
+if (benimKullaniciAdim && benimKullaniciAdim.trim() !== "") {
+    socket.emit('yeniKullaniciGeldi', benimKullaniciAdim);
+} else {
+    window.location.reload();
+}
 
-odaListesiElementi.addEventListener('click', (event) => {
-    if (event.target.classList.contains('katil-btn')) {
-        const odaAdi = event.target.dataset.odaAdi;
-        socket.emit('odayaKatil', odaAdi);
-    }
-});
-
-// Sunucu Mesajlarını Dinleme
-socket.on('onlineKullaniciListesiGuncelle', (kullanicilar) => {
-    kullaniciListesiElementi.innerHTML = '';
-    kullanicilar.forEach(k => { const li = document.createElement('li'); li.textContent = k; kullaniciListesiElementi.appendChild(li); });
-});
-
-socket.on('odaListesiGuncelle', (guncelOdalar) => {
-    odaListesiElementi.innerHTML = '';
-    guncelOdalar.forEach(oda => {
-        const li = document.createElement('li');
-        const katilButonuHTML = oda.oyuncular.length >= 4 ? '<button disabled>Dolu</button>' : `<button class="katil-btn" data-oda-adi="${oda.adi}">Katıl</button>`;
-        li.innerHTML = `<span>${oda.adi} (${oda.oyuncular.length}/4)</span>${katilButonuHTML}`;
-        odaListesiElementi.appendChild(li);
-    });
-});
-
+// Sunucu Mesajları
 socket.on('katilimBasarili', () => {
     lobiEkrani.classList.add('hidden');
     oyunOdasiEkrani.classList.remove('hidden');
 });
 
-socket.on('odaBilgisiGuncelle', (oda) => {
-    odaAdiBaslik.textContent = oda.adi;
-    // Oyuncu alanlarını ID'lerine göre haritala
-    const oyuncuAlanlari = {
-        [oda.oyuncular[0]]: document.getElementById('oyuncu-1-alani'),
-        [oda.oyuncular[1]]: document.getElementById('oyuncu-2-alani'),
-        [oda.oyuncular[2]]: document.getElementById('oyuncu-3-alani'),
-        [oda.oyuncular[3]]: document.getElementById('oyuncu-4-alani')
-    };
-    // Önce tüm alanları temizle
-    document.querySelectorAll('.oyuncu-alani').forEach((alan, index) => {
-        alan.textContent = `Oyuncu ${index + 1} Bekleniyor...`;
-        alan.dataset.oyuncuAdi = "";
+socket.on('odaBilgisiGuncelle', (data) => {
+    const panel = document.getElementById('oyuncu-listesi-panel');
+    panel.innerHTML = '';
+    data.oyuncular.forEach(oyuncu => {
+        const div = document.createElement('div');
+        div.className = 'oyuncu-kutusu';
+        div.id = `oyuncu-kutusu-${oyuncu}`;
+        div.innerHTML = `<div class="oyuncu-avatar"></div><span class="oyuncu-ismi">${oyuncu}</span>`;
+        panel.appendChild(div);
     });
-    // Sonra dolu olanları yaz
-    oda.oyuncular.forEach((oyuncu, index) => {
-        const alan = document.getElementById(`oyuncu-${index + 1}-alani`);
-        if (alan) {
-            alan.textContent = oyuncu;
-            alan.dataset.oyuncuAdi = oyuncu; // Sıra takibi için oyuncu adını elemente ekle
-        }
-    });
+    document.getElementById('oda-adi-baslik').textContent = data.odaAdi;
 });
 
 socket.on('oyunBasladi', (data) => {
-    console.log("Oyun başladı!", data);
-    istakayiCiz(data.el);
-    gostergeyiCiz(data.gosterge);
-    sirayiGuncelle(data.siraKimde);
+    benimElim = data.el;
+    mevcutOyunDurumu = data.gameState;
+    oyunDurumunuCiz(data.gameState);
+    istakayiCiz(true);
 });
 
-socket.on('oyunBitti', (data) => {
-    alert(data.mesaj);
-    // Oyuncuyu lobiye geri döndür
-    oyunOdasiEkrani.classList.add('hidden');
-    lobiEkrani.classList.remove('hidden');
+socket.on('tasCekildi', (cekilenTas) => {
+    benimElim.push(cekilenTas);
+    istakayiCiz(false);
+});
+
+socket.on('oyunDurumuGuncelle', (gameState) => {
+    mevcutOyunDurumu = gameState;
+    oyunDurumunuCiz(gameState);
+});
+
+socket.on('logGuncelle', (mesaj) => {
+    const logListesi = document.getElementById('log-listesi');
+    const li = document.createElement('li');
+    li.textContent = `> ${mesaj}`;
+    logListesi.prepend(li);
+});
+
+// Olay Dinleyicileri
+document.getElementById('orta-deste').addEventListener('click', () => {
+    if (mevcutOyunDurumu && mevcutOyunDurumu.siraKimde === benimKullaniciAdim && benimElim.length % 3 !== 0) {
+        socket.emit('ortadanCek');
+    }
 });
 
 // Yardımcı Fonksiyonlar
+function oyunDurumunuCiz(gameState) {
+    document.querySelectorAll('.oyuncu-kutusu').forEach(kutu => kutu.classList.remove('aktif-sira'));
+    const aktifKutu = document.getElementById(`oyuncu-kutusu-${gameState.siraKimde}`);
+    if (aktifKutu) aktifKutu.classList.add('aktif-sira');
+
+    document.getElementById('gosterge-alani').innerHTML = '';
+    document.getElementById('gosterge-alani').appendChild(tasiElementeCevir(gameState.gosterge));
+    document.getElementById('orta-deste-sayisi').textContent = gameState.ortaDesteSayisi;
+
+    // Atılan taşları çiz (Basit haliyle)
+    document.querySelectorAll('.yan-deste').forEach(d => d.innerHTML = '');
+    gameState.oyuncular.forEach((oyuncu, index) => {
+        const desteAlani = document.getElementById(`deste-alani-${index + 1}`);
+        if (desteAlani && gameState.atilanTaslar[oyuncu] && gameState.atilanTaslar[oyuncu].length > 0) {
+            const sonTas = gameState.atilanTaslar[oyuncu].slice(-1)[0];
+            desteAlani.appendChild(tasiElementeCevir(sonTas));
+        }
+    });
+}
+
+function istakayiCiz(sirala = false) {
+    const istakaElementi = document.getElementById('mevcut-oyuncu-istakasi');
+    if (sirala) {
+        const renkSiralama = { 'sari': 1, 'mavi': 2, 'siyah': 3, 'kirmizi': 4 };
+        benimElim.sort((a, b) => {
+            if (a.isOkey) return -1; if (b.isOkey) return 1;
+            if (renkSiralama[a.renk] < renkSiralama[b.renk]) return -1;
+            if (renkSiralama[a.renk] > renkSiralama[b.renk]) return 1;
+            return a.sayi - b.sayi;
+        });
+    }
+
+    istakaElementi.innerHTML = '';
+    benimElim.forEach(tas => {
+        const tasElementi = tasiElementeCevir(tas);
+        tasElementi.addEventListener('click', () => {
+            if (mevcutOyunDurumu && mevcutOyunDurumu.siraKimde === benimKullaniciAdim && benimElim.length % 3 === 0) {
+                socket.emit('tasAt', tas.id);
+                benimElim = benimElim.filter(t => t.id !== tas.id);
+                istakayiCiz(false);
+            }
+        });
+        istakaElementi.appendChild(tasElementi);
+    });
+}
+
 function tasiElementeCevir(tas) {
     const tasElementi = document.createElement('div');
-    tasElementi.classList.add('tas', `tas-${tas.renk}`);
-    tasElementi.textContent = tas.sayi === 0 ? 'O' : tas.sayi; // Sahte okey için 'O' yaz
-    tasElementi.dataset.id = tas.id;
+    tasElementi.className = `tas tas-${tas.renk}`;
+    tasElementi.textContent = tas.isOkey ? 'OK' : tas.sayi;
+    if (tas.isOkey) tasElementi.classList.add('okey-tasi');
     return tasElementi;
 }
-
-function istakayiCiz(el) {
-    benimIstakamElementi.innerHTML = '';
-    el.forEach(tas => {
-        benimIstakamElementi.appendChild(tasiElementeCevir(tas));
-    });
-}
-
-function gostergeyiCiz(gostergeTasi) {
-    gostergeAlani.innerHTML = '';
-    gostergeAlani.appendChild(tasiElementeCevir(gostergeTasi));
-}
-
-function sirayiGuncelle(oyuncuAdi) {
-    // Önce tüm aktif sıra vurgularını kaldır
-    document.querySelectorAll('.oyuncu-alani').forEach(alan => {
-        alan.classList.remove('aktif-sira');
-    });
-
-    // Sırası gelen oyuncunun alanını bul ve vurgula
-    const aktifOyuncuAlani = document.querySelector(`.oyuncu-alani[data-oyuncu-adi="${oyuncuAdi}"]`);
-    if (aktifOyuncuAlani) {
-        aktifOyuncuAlani.classList.add('aktif-sira');
-    }
-}
+// Lobi fonksiyonları (odaListesiGuncelle vb.) buraya eklenecek

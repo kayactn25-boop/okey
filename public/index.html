@@ -3,28 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Okey Salonu</title>
+    <title>Modern Okey Salonu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="oyun-odasi-ekrani" class="hidden">
-        <div class="oda-basligi">
-            <h1 id="oda-adi-baslik">Oda Adı Bekleniyor...</h1>
-        </div>
-        <div class="oyun-masasi">
-            <div class="oyuncu-alani" id="oyuncu-2-alani">Oyuncu 2 Bekleniyor...</div>
-            <div class="masa-ortasi">
-                <div class="oyuncu-alani" id="oyuncu-3-alani">Oyuncu 3 Bekleniyor...</div>
-                <div id="orta-desteler">
-                    <div id="gosterge-alani">
-                        </div>
+        <div id="oda-sol-panel">
+            <h2 id="oda-adi-baslik">Oda Adı</h2>
+            <div id="oyuncu-listesi-panel">
                 </div>
-                <div class="oyuncu-alani" id="oyuncu-1-alani">Oyuncu 1 Bekleniyor...</div>
+            <div id="oyun-logu-kutusu">
+                <h3>Oyun Akışı</h3>
+                <ul id="log-listesi"></ul>
             </div>
-            <div class="oyuncu-alani" id="oyuncu-4-alani">Oyuncu 4 Bekleniyor...</div>
         </div>
-        <div id="mevcut-oyuncu-istakasi">
-            <p>Istakanız Yükleniyor...</p>
+        <div id="ana-oyun-alani">
+            <div class="rakip-istaka-ust" id="oyuncu-alani-2"></div>
+            <div class="rakip-istaka-sol" id="oyuncu-alani-3"></div>
+            <div id="orta-masa">
+                <div class="yan-deste" id="deste-alani-3"></div>
+                <div id="orta-deste-alani">
+                    <div id="gosterge-alani"></div>
+                    <div id="orta-deste" class="hedef"><span>Ortadan Çek</span><span id="orta-deste-sayisi">106</span></div>
+                </div>
+                <div class="yan-deste" id="deste-alani-1"></div>
+            </div>
+            <div class="rakip-istaka-sag" id="oyuncu-alani-4"></div>
+            <div id="benim-alanim">
+                <div class="yan-deste" id="deste-alani-2"></div>
+                <div class="yan-deste" id="deste-alani-4"></div>
+                <div id="mevcut-oyuncu-istakasi"></div>
+            </div>
         </div>
     </div>
 
