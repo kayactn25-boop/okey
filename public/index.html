@@ -7,15 +7,47 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js" defer></script>
 </head>
 <body>
+    <div id="giris-ekrani">
+        <div class="giris-kutusu">
+            <h1>Modern Okey</h1>
+            <p>Lobiye bağlanmak için bir kullanıcı adı girin.</p>
+            <input type="text" id="kullanici-adi-input" placeholder="Kullanıcı Adınız" maxlength="15">
+            <button id="lobiye-katil-btn">Lobiye Katıl</button>
+        </div>
+    </div>
+    
+    <div id="lobi-ekrani" class="hidden">
+        <div class="lobi-container">
+            <div class="lobi-oyun-alani">
+                <h1>Okey Salonu - Lobi</h1>
+                <p>Oda kurmak veya bir odaya katılmak için yandaki menüyü kullanın.</p>
+            </div>
+            <div class="lobi-yan-panel">
+                <div class="lobi-bolum">
+                    <h2>Odalar</h2>
+                    <div class="oda-kur-formu">
+                        <input type="text" id="oda-adi-input" placeholder="Oda Adı Girin..." maxlength="20">
+                        <button id="oda-kur-btn">Oda Kur</button>
+                    </div>
+                    <ul id="oda-listesi"></ul>
+                </div>
+                <div class="lobi-bolum">
+                    <h2>Online Oyuncular</h2>
+                    <ul id="online-kullanicilar-listesi"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="oyun-odasi-ekrani" class="hidden">
         <div id="oda-sol-panel">
             <h2 id="oda-adi-baslik">Oda Adı</h2>
-            <div id="oyuncu-listesi-panel">
-                </div>
+            <div id="oyuncu-listesi-panel"></div>
             <div id="oyun-logu-kutusu">
                 <h3>Oyun Akışı</h3>
                 <ul id="log-listesi"></ul>
@@ -25,17 +57,17 @@
             <div id="ust-oyuncu-alani" class="rakip-alani"></div>
             <div id="sol-oyuncu-alani" class="rakip-alani"></div>
             <div id="orta-masa">
-                <div class="yan-deste" id="deste-alani-3"></div>
+                <div class="yan-deste" id="deste-alani-sol"></div>
                 <div id="orta-deste-alani">
                     <div id="gosterge-alani"></div>
                     <div id="orta-deste" class="hedef"><span>Ortadan Çek</span><span id="orta-deste-sayisi"></span></div>
                 </div>
-                <div class="yan-deste" id="deste-alani-1"></div>
+                <div class="yan-deste" id="deste-alani-sag"></div>
             </div>
             <div id="sag-oyuncu-alani" class="rakip-alani"></div>
             <div id="benim-alanim">
-                 <div class="yan-deste" id="deste-alani-2"></div>
-                 <div class="yan-deste" id="deste-alani-4"></div>
+                 <div class="yan-deste" id="deste-alani-ust"></div>
+                 <div class="yan-deste" id="deste-alani-benim"></div>
             </div>
              <div id="mevcut-oyuncu-istakasi"></div>
         </div>
@@ -45,40 +77,27 @@
                 <ul id="sohbet-mesajlari"></ul>
                 <div class="sohbet-input-alani">
                     <input type="text" id="sohbet-input" placeholder="Mesajınızı yazın...">
-                    <button id="sohbet-gonder-btn">Gönder</button>
+                    <button id="sohbet-gonder-btn"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
             </div>
             <button id="bit-btn" class="oyun-butonu hidden">Okey / Bit</button>
         </div>
     </div>
 
-    <div id="lobi-ekrani" class="container">
-        <div id="oyun-alani">
-            <h1>Okey Salonu - Lobi</h1>
-            <p>Oda kurmak veya bir odaya katılmak için yandaki menüyü kullanın.</p>
-        </div>
-        <div id="yan-panel">
-            <div id="oda-yonetimi">
-                <h2>Odalar</h2>
-                <div id="oda-kur-formu">
-                    <input type="text" id="oda-adi-input" placeholder="Oda Adı Girin..." maxlength="20">
-                    <button id="oda-kur-btn">Oda Kur</button>
-                </div>
-                <ul id="oda-listesi"></ul>
-            </div>
-            <h2>Online Oyuncular</h2>
-            <ul id="online-kullanicilar-listesi"></ul>
-        </div>
-    </div>
-
     <div id="oyun-bitti-modal" class="modal-arkaplan hidden">
         <div class="modal-icerik">
             <h2 id="kazanan-bilgisi">Oyuncu Kazandı!</h2>
-            <p>Kazanan El:</p>
+            <p id="bitis-mesaji"></p>
             <div id="kazanan-el" class="istaka-goster"></div>
             <button id="lobiye-don-btn">Lobiye Dön</button>
         </div>
     </div>
+
+    <div id="toast-container"></div>
+
+    <audio id="ses-cek" src="/sounds/cek.mp3"></audio>
+    <audio id="ses-at" src="/sounds/at.mp3"></audio>
+    <audio id="ses-kazan" src="/sounds/kazan.mp3"></audio>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="client.js"></script>

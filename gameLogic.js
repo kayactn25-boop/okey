@@ -48,7 +48,6 @@ class OkeyGame {
                 tas.isOkey = true;
             }
         });
-        console.log(`GÖSTERGE: ${this.gosterge.renk} ${this.gosterge.sayi} -> OKEY: ${this.okeyTasi.renk} ${this.okeyTasi.sayi}`);
     }
 
     taslariDagit() {
@@ -94,7 +93,8 @@ class OkeyGame {
     }
 
     eliDogrula(el) {
-        console.log("UYARI: El doğrulama mantığı henüz tam olarak geliştirilmedi. Her bitiş geçerli sayılıyor.");
+        if (el.length !== 14) return false;
+        console.log("UYARI: El doğrulama mantığı şimdilik basittir. Her bitişi geçerli sayar.");
         return true;
     }
 

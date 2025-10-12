@@ -84,12 +84,13 @@ io.on('connection', (socket) => {
         if (oda && oda.oyunDurumu && !oda.oyunDurumu.oyunBittiMi) {
             if (oda.oyunDurumu.eliDogrula(gelenEl)) {
                 oda.oyunDurumu.oyunBittiMi = true;
-                io.to(oda.adi).emit('oyunBitti', { kazanan: oyuncuAdi, kazananEl: gelenEl });
+                io.to(oda.adi).emit('oyunBitti', { kazanan: oyuncuAdi, kazananEl: gelenEl, mesaj: "Elini açarak oyunu bitirdi." });
                 io.to(oda.adi).emit('logGuncelle', `!!! ${oyuncuAdi} oyunu bitirdi! Tebrikler!`);
                 delete odalar[oda.adi];
                 io.emit('odaListesiGuncelle', Object.values(odalar));
             } else {
                 socket.emit('logGuncelle', 'Hatalı bitme denemesi! Eliniz kurallara uygun değil.');
+                socket.emit('toastBildirimi', { tur: 'hata', mesaj: 'Geçersiz El!' });
             }
         }
     });
@@ -101,7 +102,29 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('disconnect', () => { /* Disconnect mantığı aynı */ });
+    socket.on('disconnect', () => {
+        const ayrilanKullanici = onlineKullanicilar[socket.id];
+        if (!ayrilanKullanici) return;
+
+        const oda = oyuncununOdasiniBul(ayrilanKullanici);
+        console.log(`❌ Kullanıcı ayrıldı: ${ayrilanKullanici}`);
+        
+        delete onlineKullanicilar[socket.id];
+        delete kullaniciSocketMap[ayrilanKullanici];
+        io.emit('onlineKullaniciListesiGuncelle', Object.values(onlineKullanicilar));
+
+        if (oda) {
+            if (oda.oyunDurumu && !oda.oyunDurumu.oyunBittiMi) {
+                oda.oyunDurumu.oyunBittiMi = true;
+                io.to(oda.adi).emit('oyunBitti', { kazanan: null, kazananEl: [], mesaj: `${ayrilanKullanici} oyundan ayrıldığı için oyun dağıldı.` });
+                delete odalar[oda.adi];
+            } else {
+                oda.oyuncular = oda.oyuncular.filter(p => p !== ayrilanKullanici);
+                io.to(oda.adi).emit('odaBilgisiGuncelle', { oyuncular: oda.oyuncular, odaAdi: oda.adi });
+            }
+            io.emit('odaListesiGuncelle', Object.values(odalar));
+        }
+    });
 });
 
 function oyunuBaslat(odaAdi) {
@@ -119,7 +142,7 @@ function oyunuBaslat(odaAdi) {
             });
         }
     });
-    io.to(odaAdi).emit('logGuncelle', `Oyun başladı! Gösterge: ${oyun.gosterge.renk} ${oyun.gosterge.sayi}. Sıra ${baslangicGameState.siraKimde}'da.`);
+    io.to(oda.adi).emit('logGuncelle', `Oyun başladı! Gösterge: ${oyun.gosterge.renk} ${oyun.gosterge.sayi}. Sıra ${baslangicGameState.siraKimde}'da.`);
 }
 
 function oyuncununOdasiniBul(oyuncuAdi) {
