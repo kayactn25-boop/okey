@@ -87,7 +87,6 @@ h2 {
     cursor: pointer;
     font-size: 0.9em;
 }
-/* ODA DOLU BUTONU İÇİN YENİ STİL */
 #oda-listesi li button:disabled {
     background-color: #6c757d;
     cursor: not-allowed;
@@ -99,4 +98,71 @@ h2 {
     background-color: #e7f3ff;
     color: #0d6efd;
     font-weight: 500;
+}
+
+/* Gizleme/Gösterme için yardımcı sınıf */
+.hidden {
+    display: none !important;
+}
+
+/* ========= OYUN ODASI STİLLERİ ========= */
+#oyun-odasi-ekrani {
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #006400; /* Koyu yeşil masa rengi */
+    color: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.oda-basligi {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid rgba(255,255,255,0.3);
+}
+
+.oyun-masasi {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.masa-ortasi {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+}
+
+#orta-desteler {
+    width: 400px;
+    height: 200px;
+    background-color: #004d00;
+    border: 2px dashed rgba(255,255,255,0.4);
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.oyuncu-alani {
+    padding: 15px;
+    background-color: rgba(0,0,0,0.3);
+    border-radius: 8px;
+    text-align: center;
+    min-width: 150px;
+    margin: 10px;
+}
+
+#mevcut-oyuncu-istakasi {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #8B4513; /* Istaka rengi */
+    border-radius: 10px;
+    min-height: 100px;
+    text-align: center;
 }

@@ -7,7 +7,24 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
+    <div id="oyun-odasi-ekrani" class="hidden">
+        <div class="oda-basligi">
+            <h1 id="oda-adi-baslik">Oda Adı Bekleniyor...</h1>
+        </div>
+        <div class="oyun-masasi">
+            <div class="oyuncu-alani" id="oyuncu-2">Oyuncu 2 Bekleniyor...</div>
+            <div class="masa-ortasi">
+                <div class="oyuncu-alani" id="oyuncu-3">Oyuncu 3 Bekleniyor...</div>
+                <div id="orta-desteler">Okey Masası</div>
+                <div class="oyuncu-alani" id="oyuncu-1">Oyuncu 1 Bekleniyor...</div>
+            </div>
+            <div class="oyuncu-alani" id="oyuncu-4">Oyuncu 4 Bekleniyor...</div>
+        </div>
+        <div id="mevcut-oyuncu-istakasi">
+            <p>Benim Istakam</p>
+        </div>
+    </div>
+    <div id="lobi-ekrani" class="container">
         <div id="oyun-alani">
             <h1>Okey Salonu - Lobi</h1>
             <p>Oda kurmak veya bir odaya katılmak için yandaki menüyü kullanın.</p>
@@ -27,6 +44,7 @@
                 </ul>
         </div>
     </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="client.js"></script>
 </body>
