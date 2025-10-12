@@ -45,7 +45,6 @@ odaKurBtn.addEventListener('click', () => {
     if (odaAdi) socket.emit('odaKur', odaAdi);
     odaAdiInput.value = '';
 });
-
 odaListesiElementi.addEventListener('click', (event) => {
     if (event.target.classList.contains('katil-btn')) {
         socket.emit('odayaKatil', event.target.dataset.odaAdi);
@@ -62,18 +61,15 @@ socket.on('odaListesiGuncelle', (guncelOdalar) => {
         odaListesiElementi.appendChild(li);
     });
 });
-
 socket.on('onlineKullaniciListesiGuncelle', (kullanicilar) => {
     onlineKullanicilarListesi.innerHTML = '';
     kullanicilar.forEach(k => { const li = document.createElement('li'); li.textContent = k; onlineKullanicilarListesi.appendChild(li); });
 });
-
 socket.on('katilimBasarili', () => {
     lobiEkrani.classList.add('hidden');
     oyunOdasiEkrani.classList.remove('hidden');
     oyunArayuzuOlaylariniBaslat();
 });
-
 socket.on('odaBilgisiGuncelle', (data) => {
     const panel = document.getElementById('oyuncu-listesi-panel');
     panel.innerHTML = '';
@@ -86,7 +82,6 @@ socket.on('odaBilgisiGuncelle', (data) => {
     });
     document.getElementById('oda-adi-baslik').textContent = data.odaAdi;
 });
-
 socket.on('oyunBasladi', (data) => {
     benimElim = data.el;
     mevcutOyunDurumu = data.gameState;
@@ -94,13 +89,11 @@ socket.on('oyunBasladi', (data) => {
     istakayiCiz(true);
     istakayiEtkilesimliYap();
 });
-
 socket.on('tasCekildi', (cekilenTas) => {
     benimElim.push(cekilenTas);
     istakayiCiz(false);
     sesler.cek.play();
 });
-
 socket.on('oyunDurumuGuncelle', (gameState) => {
     const siraBendeMiydi = mevcutOyunDurumu && mevcutOyunDurumu.siraKimde === benimKullaniciAdim;
     mevcutOyunDurumu = gameState;
@@ -110,27 +103,26 @@ socket.on('oyunDurumuGuncelle', (gameState) => {
         showToast({ tur: 'bilgi', mesaj: 'Sıra sizde!' });
     }
     if(!siraBendeMiydi && !siraSimdiBendeMi){
-         sesler.at.play();
+        sesler.at.play();
     }
 });
-
 socket.on('logGuncelle', (mesaj) => {
     const logListesi = document.getElementById('log-listesi');
     const li = document.createElement('li');
-li.innerHTML = `&rarr; ${mesaj}`;
+    li.innerHTML = `&rarr; ${mesaj}`;
     logListesi.prepend(li);
 });
-
 socket.on('oyunBitti', (data) => {
     document.getElementById('kazanan-bilgisi').textContent = data.kazanan ? `${data.kazanan} Kazandı!` : "Oyun Bitti!";
     document.getElementById('bitis-mesaji').textContent = data.mesaj;
     const kazananElAlani = document.getElementById('kazanan-el');
     kazananElAlani.innerHTML = '';
-    data.kazananEl.forEach(tas => kazananElAlani.appendChild(tasiElementeCevir(tas, false)));
+    if (data.kazananEl) {
+        data.kazananEl.forEach(tas => kazananElAlani.appendChild(tasiElementeCevir(tas, false)));
+    }
     document.getElementById('oyun-bitti-modal').classList.remove('hidden');
     sesler.kazan.play();
 });
-
 socket.on('yeniMesaj', (data) => {
     const mesajListesi = document.getElementById('sohbet-mesajlari');
     const li = document.createElement('li');
@@ -138,7 +130,6 @@ socket.on('yeniMesaj', (data) => {
     mesajListesi.appendChild(li);
     mesajListesi.scrollTop = mesajListesi.scrollHeight;
 });
-
 socket.on('toastBildirimi', showToast);
 
 function oyunArayuzuOlaylariniBaslat() {
@@ -155,7 +146,10 @@ function oyunArayuzuOlaylariniBaslat() {
     });
     document.getElementById('sohbet-gonder-btn').addEventListener('click', mesajGonder);
     document.getElementById('sohbet-input').addEventListener('keyup', (e) => { if (e.key === 'Enter') mesajGonder(); });
-    document.getElementById('bit-btn').addEventListener('click', bitmeIstegiGonder);
+    document.getElementById('bit-btn').addEventListener('click', () => bitmeIstegiGonder(false));
+    document.getElementById('cifte-bit-btn').addEventListener('click', () => bitmeIstegiGonder(true));
+    document.getElementById('perleri-grupla-btn').addEventListener('click', perleriOtomatikGrupla);
+    document.getElementById('odadan-ayril-btn').addEventListener('click', () => socket.emit('odadanAyril'));
     document.getElementById('lobiye-don-btn').addEventListener('click', () => window.location.reload());
 }
 
@@ -163,11 +157,9 @@ function oyunDurumunuCiz(gameState) {
     document.querySelectorAll('.oyuncu-kutusu').forEach(kutu => kutu.classList.remove('aktif-sira'));
     const aktifKutu = document.getElementById(`oyuncu-kutusu-${gameState.siraKimde}`);
     if (aktifKutu) aktifKutu.classList.add('aktif-sira');
-
     document.getElementById('gosterge-alani').innerHTML = '';
     document.getElementById('gosterge-alani').appendChild(tasiElementeCevir(gameState.gosterge, false));
     document.getElementById('orta-deste-sayisi').textContent = gameState.ortaDesteSayisi;
-    
     document.querySelectorAll('.yan-deste').forEach(d => {
         d.innerHTML = '';
         d.classList.remove('aktif-hedef');
@@ -175,7 +167,6 @@ function oyunDurumunuCiz(gameState) {
 
     const benimIndexim = gameState.oyuncular.indexOf(benimKullaniciAdim);
     const pozisyonMap = ['benim', 'sag', 'ust', 'sol'];
-
     gameState.oyuncular.forEach((oyuncu, index) => {
         const atilanlar = gameState.atilanTaslar[oyuncu];
         if (atilanlar && atilanlar.length > 0) {
@@ -187,7 +178,6 @@ function oyunDurumunuCiz(gameState) {
             }
         }
     });
-
     const oncekiOyuncuIndex = (gameState.oyuncular.indexOf(gameState.siraKimde) + 3) % 4;
     if (gameState.sonAtilanTas) {
          const oncekiOyuncuPozisyonu = (oncekiOyuncuIndex - benimIndexim + 4) % 4;
@@ -213,7 +203,8 @@ function istakayiCiz(sirala = false) {
         tasElementi.dataset.id = tas.id;
         istakaElementi.appendChild(tasElementi);
     });
-    document.getElementById('bit-btn').classList.toggle('hidden', benimElim.length !== 14);
+    document.getElementById('bit-btn').classList.toggle('hidden', benimElim.length !== 15);
+    document.getElementById('cifte-bit-btn').classList.toggle('hidden', benimElim.length !== 14);
 }
 
 function istakayiEtkilesimliYap() {
@@ -236,10 +227,7 @@ function tasiElementeCevir(tas, tıklanabilir) {
     if (tıklanabilir) {
         el.addEventListener('click', () => {
             if (mevcutOyunDurumu && mevcutOyunDurumu.siraKimde === benimKullaniciAdim && benimElim.length % 3 === 0) {
-                sesler.at.play();
                 socket.emit('tasAt', tas.id);
-                benimElim = benimElim.filter(t => t.id !== tas.id);
-                istakayiCiz(false);
             }
         });
     }
@@ -254,9 +242,22 @@ function mesajGonder() {
     }
 }
 
-function bitmeIstegiGonder() {
-    if (benimElim.length === 14) {
-        socket.emit('bitmeIstegi', benimElim);
+function bitmeIstegiGonder(ciftMi) {
+    const istakaElementi = document.getElementById('mevcut-oyuncu-istakasi');
+    const guncelSira = Array.from(istakaElementi.querySelectorAll('.tas')).map(el => el.dataset.id);
+    const siraliEl = [...benimElim].sort((a, b) => guncelSira.indexOf(a.id) - guncelSira.indexOf(b.id));
+
+    if ((ciftMi && siraliEl.length !== 14) || (!ciftMi && siraliEl.length !== 15)) {
+        showToast({tur: 'hata', mesaj: 'El sayısı bitiş için uygun değil!'});
+        return;
+    }
+    
+    if (!ciftMi) {
+        const atilacakTas = siraliEl.pop(); // Son taşı atıyoruz
+        socket.emit('tasAt', atilacakTas.id);
+        setTimeout(() => socket.emit('bitmeIstegi', { el: siraliEl, ciftMi: ciftMi }), 100);
+    } else {
+        socket.emit('bitmeIstegi', { el: siraliEl, ciftMi: ciftMi });
     }
 }
 
@@ -275,9 +276,7 @@ function showToast(data) {
 
 function renkUret(str) {
     let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
+    for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
     let color = '#';
     for (let i = 0; i < 3; i++) {
         let value = (hash >> (i * 8)) & 0xFF;

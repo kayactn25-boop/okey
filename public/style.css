@@ -12,7 +12,7 @@ body { font-family: var(--ana-font); margin: 0; background-color: #e9ecef; color
 
 /* LOBİ EKRANI */
 #lobi-ekrani { display: flex; height: 100vh; justify-content: center; align-items: center; }
-.lobi-container { display: flex; gap: 20px; width: 100%; max-width: 1200px; height: 90vh; }
+.lobi-container { display: flex; gap: 20px; width: 100%; max-width: 900px; height: 90vh; }
 .lobi-oyun-alani, .lobi-yan-panel { background-color: white; padding: 20px; border-radius: 8px; box-shadow: var(--golge); }
 .lobi-oyun-alani { flex-grow: 1; }
 .lobi-yan-panel { flex-basis: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 20px; }
@@ -30,10 +30,10 @@ body { font-family: var(--ana-font); margin: 0; background-color: #e9ecef; color
 /* OYUN ODASI */
 #oyun-odasi-ekrani { display: flex; height: 100vh; background-image: url('https://www.transparenttextures.com/patterns/felt.png'); background-color: var(--masa-yesili); }
 #oda-sol-panel, #oda-sag-panel { width: 280px; background-color: var(--panel-bg); padding: 15px; display: flex; flex-direction: column; box-shadow: var(--golge); z-index: 10; }
-#oda-adi-baslik { text-align: center; margin: 0 0 15px 0; font-size: 1.4em; padding-bottom: 10px; }
+#oda-adi-baslik { text-align: center; margin: 0 0 15px 0; font-size: 1.4em; padding-bottom: 10px; border-bottom: 1px solid #dee2e6; }
 #oyuncu-listesi-panel { display: flex; flex-direction: column; gap: 10px; }
 .oyuncu-kutusu { display: flex; align-items: center; padding: 10px; border-radius: 8px; border: 2px solid transparent; transition: all 0.3s ease; }
-.oyuncu-kutusu.aktif-sira { border-color: var(--vurgu-sarisi); background-color: #fffbeb; transform: scale(1.02); }
+.oyuncu-kutusu.aktif-sira { border-color: var(--vurgu-sarisi); background-color: #fffbeb; animation: pulse 1.5s infinite; }
 .oyuncu-avatar { width: 40px; height: 40px; background-color: #ccc; border-radius: 50%; margin-right: 15px; }
 .oyuncu-ismi { font-weight: 500; font-size: 1.1em; }
 #oyun-logu-kutusu { margin-top: auto; border-top: 1px solid #ccc; padding-top: 10px; }
@@ -46,8 +46,8 @@ body { font-family: var(--ana-font); margin: 0; background-color: #e9ecef; color
 .rakip-alani { background: rgba(0,0,0,0.1); border-radius: 8px; }
 #ust-oyuncu-alani { grid-area: ust; } #sol-oyuncu-alani { grid-area: sol; } #sag-oyuncu-alani { grid-area: sag; }
 #orta-masa { grid-area: orta; background-color: var(--koyu-yesil); border-radius: 15px; border: 3px dashed rgba(255, 255, 255, 0.4); display: flex; justify-content: center; align-items: center; gap: 20px; }
-#benim-alanim { grid-area: benim; display: flex; justify-content: space-between; gap: 10px; align-items: center; }
-#mevcut-oyuncu-istakasi { grid-column: 1 / -1; background: var(--istaka-rengi); border-radius: 10px; padding: 10px; display: flex; gap: 5px; min-height: 80px; align-items: center; justify-content: flex-start; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); overflow-x: auto; }
+#benim-istaka-alani { grid-column: 1 / -1; grid-row: 4; display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+#mevcut-oyuncu-istakasi { flex-grow: 1; background: var(--istaka-rengi); border-radius: 10px; padding: 10px; display: flex; gap: 5px; min-height: 80px; align-items: center; justify-content: flex-start; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); overflow-x: auto; }
 #orta-deste-alani { display: flex; align-items: center; gap: 20px; }
 #gosterge-alani { padding: 5px; background: rgba(0,0,0,0.2); border-radius: 5px; }
 #orta-deste { color: white; text-align: center; font-weight: 600; padding: 20px; border-radius: 10px; border: 2px solid white; cursor: pointer; transition: transform 0.2s, background-color 0.2s; user-select: none; }
@@ -65,16 +65,20 @@ body { font-family: var(--ana-font); margin: 0; background-color: #e9ecef; color
 .sortable-ghost { opacity: 0.4; background: var(--vurgu-sarisi) !important; }
 
 /* SAĞ PANEL: SOHBET ve BUTONLAR */
-#oda-sag-panel { justify-content: flex-end; }
-#sohbet-kutusu { width: 100%; height: 350px; display: flex; flex-direction: column; border: 1px solid #ccc; border-radius: 8px; background: #fff; margin-bottom: 15px; }
+#oda-sag-panel { justify-content: space-between; }
+#sohbet-kutusu { width: 100%; height: 60%; display: flex; flex-direction: column; border: 1px solid #ccc; border-radius: 8px; background: #fff; }
 #sohbet-kutusu h3 { margin: 0; padding: 10px; text-align: center; border-bottom: 1px solid #ccc; }
 #sohbet-mesajlari { list-style: none; padding: 10px; margin: 0; overflow-y: auto; flex-grow: 1; }
 .mesaj-gonderen { font-weight: 600; }
 .sohbet-input-alani { display: flex; border-top: 1px solid #ccc; }
 #sohbet-input { flex-grow: 1; border: none; padding: 10px; outline: none; border-radius: 0 0 0 8px; }
 #sohbet-gonder-btn { border: none; background: #007bff; color: white; padding: 0 15px; cursor: pointer; font-size: 1.2em; border-radius: 0 0 8px 0; }
-.oyun-butonu { width: 100%; padding: 15px; font-size: 1.2em; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; background-color: #28a745; color: white; transition: background-color 0.2s; }
-.oyun-butonu:hover { background-color: #218838; }
+.oyun-butonlari { display: flex; flex-direction: column; gap: 10px; }
+.oyun-butonu { width: 100%; padding: 15px; font-size: 1.1em; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; color: white; transition: background-color 0.2s; }
+.oyun-butonu:hover { opacity: 0.9; }
+.oyun-butonu#bit-btn { background-color: #28a745; }
+.oyun-butonu.ikincil-buton { background-color: #6c757d; }
+.oyun-butonu.tehlike-butonu { background-color: var(--hata-rengi); margin-top: 20px; }
 
 /* MODAL */
 .modal-arkaplan { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; animation: fadeIn 0.3s; }
@@ -91,3 +95,4 @@ body { font-family: var(--ana-font); margin: 0; background-color: #e9ecef; color
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes zoomIn { from { transform: scale(0.9); } to { transform: scale(1); } }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); } }

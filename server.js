@@ -79,20 +79,26 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('bitmeIstegi', (gelenEl) => {
-        const oyuncuAdi = onlineKullanicilar[socket.id]; const oda = oyuncununOdasiniBul(oyuncuAdi);
+    socket.on('bitmeIstegi', (data) => {
+        const oyuncuAdi = onlineKullanicilar[socket.id];
+        const oda = oyuncununOdasiniBul(oyuncuAdi);
         if (oda && oda.oyunDurumu && !oda.oyunDurumu.oyunBittiMi) {
-            if (oda.oyunDurumu.eliDogrula(gelenEl)) {
+            const elGecerliMi = oda.oyunDurumu.eliDogrula(data.el, data.ciftMi);
+            if (elGecerliMi) {
                 oda.oyunDurumu.oyunBittiMi = true;
-                io.to(oda.adi).emit('oyunBitti', { kazanan: oyuncuAdi, kazananEl: gelenEl, mesaj: "Elini açarak oyunu bitirdi." });
+                let puan = data.ciftMi ? 4 : 2;
+                io.to(oda.adi).emit('oyunBitti', { kazanan: oyuncuAdi, kazananEl: data.el, mesaj: `Oyunu ${data.ciftMi ? 'çifte biterek' : 'normal'} bitirdi! (+${puan} Puan)` });
                 io.to(oda.adi).emit('logGuncelle', `!!! ${oyuncuAdi} oyunu bitirdi! Tebrikler!`);
                 delete odalar[oda.adi];
                 io.emit('odaListesiGuncelle', Object.values(odalar));
             } else {
-                socket.emit('logGuncelle', 'Hatalı bitme denemesi! Eliniz kurallara uygun değil.');
                 socket.emit('toastBildirimi', { tur: 'hata', mesaj: 'Geçersiz El!' });
             }
         }
+    });
+    
+    socket.on('odadanAyril', () => {
+        socket.disconnect();
     });
 
     socket.on('mesajGonder', (mesaj) => {
