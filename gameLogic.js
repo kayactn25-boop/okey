@@ -9,16 +9,13 @@ class OkeyGame {
         this.atilanTaslar = {};
         this.sonAtilanTas = null;
         this.oyunBittiMi = false;
-        this.puanlar = {};
+        this.hazirOyuncular = new Set();
     }
 
     baslat() {
         this._okeyBelirle();
         this._taslariDagit();
-        this.oyuncular.forEach(p => {
-            this.atilanTaslar[p] = [];
-            this.puanlar[p] = 0;
-        });
+        this.oyuncular.forEach(p => this.atilanTaslar[p] = []);
     }
 
     _desteOlusturVeKaristir() {
@@ -82,7 +79,7 @@ class OkeyGame {
     tasAt(oyuncuAdi, tasId) {
         if (this.oyuncular[this.siraKimdeIndex] !== oyuncuAdi) return false;
         const el = this.eller[oyuncuAdi];
-        if (el.length % 3 === 0) return false; // Elinde 15, 12, 9... taş olmalı
+        if (el.length % 3 === 0) return false;
         const atilanTasIndex = el.findIndex(t => t.id === tasId);
         if (atilanTasIndex === -1) return false;
         const atilanTas = el.splice(atilanTasIndex, 1)[0];
@@ -126,9 +123,7 @@ class OkeyGame {
             return ciftSayisi === 7;
         }
         
-        // Normal bitiş doğrulaması şimdilik basitleştirilmiştir.
-        // Gerçek bir backtracking algoritması çok daha karmaşıktır.
-        console.log("UYARI: Normal el doğrulama mantığı basitleştirilmiştir.");
+        console.log("UYARI: Normal el doğrulama algoritması hala basitleştirilmiş bir versiyondur.");
         return true;
     }
 
@@ -140,7 +135,8 @@ class OkeyGame {
             gosterge: this.gosterge,
             okeyTasi: this.okeyTasi,
             ortaDesteSayisi: this.ortaDeste.length,
-            sonAtilanTas: this.sonAtilanTas
+            sonAtilanTas: this.sonAtilanTas,
+            hazirOyuncular: Array.from(this.hazirOyuncular)
         };
     }
 }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Okey Elmas</title>
+    <title>Okey Platin</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet"/>
@@ -14,10 +14,24 @@
 <body>
     <div id="giris-ekrani">
         <div class="giris-kutusu">
-            <h1>Okey Elmas</h1>
-            <p>Lobiye bağlanmak için bir kullanıcı adı girin.</p>
-            <input type="text" id="kullanici-adi-input" placeholder="Kullanıcı Adınız" maxlength="15">
-            <button id="lobiye-katil-btn">Lobiye Katıl</button>
+            <h1>Okey Platin</h1>
+            <div class="form-sekmeleri">
+                <button class="sekme-btn aktif" data-form="login-form">Giriş Yap</button>
+                <button class="sekme-btn" data-form="register-form">Kayıt Ol</button>
+            </div>
+            <div class="form-icerik">
+                <form id="login-form">
+                    <input type="text" name="username" placeholder="Kullanıcı Adı" required>
+                    <input type="password" name="password" placeholder="Şifre" required>
+                    <button type="submit">Giriş Yap</button>
+                </form>
+                <form id="register-form" class="hidden">
+                    <input type="text" name="username" placeholder="Kullanıcı Adı" required>
+                    <input type="email" name="email" placeholder="E-posta" required>
+                    <input type="password" name="password" placeholder="Şifre" required>
+                    <button type="submit">Kayıt Ol</button>
+                </form>
+            </div>
         </div>
     </div>
     
@@ -45,46 +59,58 @@
     </div>
 
     <div id="oyun-odasi-ekrani" class="hidden">
-        <div id="oda-sol-panel">
-            <h2 id="oda-adi-baslik">Oda Adı</h2>
-            <div id="oyuncu-listesi-panel"></div>
-            <div id="oyun-logu-kutusu">
-                <h3>Oyun Akışı</h3>
-                <ul id="log-listesi"></ul>
+        <div class="ust-bar">
+            <div class="oda-bilgisi">
+                <h2 id="oda-adi-baslik">Oda Adı</h2>
+                <span id="gosterge-bilgisi"></span>
             </div>
-            <button id="odadan-ayril-btn" class="oyun-butonu tehlike-butonu">Odadan Ayrıl</button>
-        </div>
-        <div id="ana-oyun-alani">
-            <div id="rakip-alani-ust" class="rakip-alani"></div>
-            <div id="rakip-alani-sol" class="rakip-alani"></div>
-            <div id="orta-masa">
-                <div class="yan-deste" id="deste-alani-sol"></div>
-                <div id="orta-deste-alani">
-                    <div id="gosterge-alani"></div>
-                    <div id="orta-deste" class="hedef"><span>Ortadan Çek</span><span id="orta-deste-sayisi"></span></div>
-                </div>
-                <div class="yan-deste" id="deste-alani-sag"></div>
-            </div>
-            <div id="rakip-alani-sag" class="rakip-alani"></div>
-            <div id="benim-istaka-alani">
-                 <div class="yan-deste" id="deste-alani-ust"></div>
-                 <div id="mevcut-oyuncu-istakasi"></div>
-                 <div class="yan-deste" id="deste-alani-benim"></div>
+            <div class="oyun-kontrolleri">
+                <button id="tema-btn" class="kontrol-btn"><i class="fa-solid fa-moon"></i></button>
+                <button id="ses-btn" class="kontrol-btn"><i class="fa-solid fa-volume-high"></i></button>
             </div>
         </div>
-        <div id="oda-sag-panel">
-            <div id="sohbet-kutusu">
-                <h3>Sohbet</h3>
-                <ul id="sohbet-mesajlari"></ul>
-                <div class="sohbet-input-alani">
-                    <input type="text" id="sohbet-input" placeholder="Mesajınızı yazın...">
-                    <button id="sohbet-gonder-btn"><i class="fa-solid fa-paper-plane"></i></button>
+        <div id="oyun-alani-wrapper">
+            <div id="oda-sol-panel">
+                <div id="oyuncu-listesi-panel"></div>
+                <div id="oyun-logu-kutusu">
+                    <h3>Oyun Akışı</h3>
+                    <ul id="log-listesi"></ul>
+                </div>
+                <button id="odadan-ayril-btn" class="oyun-butonu tehlike-butonu">Odadan Ayrıl</button>
+            </div>
+            <div id="ana-oyun-alani">
+                <div id="rakip-alani-ust" class="rakip-alani"></div>
+                <div id="rakip-alani-sol" class="rakip-alani"></div>
+                <div id="orta-masa">
+                    <div class="yan-deste" id="deste-alani-sol"></div>
+                    <div id="orta-deste-alani">
+                        <div id="gosterge-alani"></div>
+                        <div id="orta-deste" class="hedef"><span>Ortadan Çek</span><span id="orta-deste-sayisi"></span></div>
+                    </div>
+                    <div class="yan-deste" id="deste-alani-sag"></div>
+                </div>
+                <div id="rakip-alani-sag" class="rakip-alani"></div>
+                <div id="benim-istaka-alani">
+                     <div class="yan-deste" id="deste-alani-ust"></div>
+                     <div id="mevcut-oyuncu-istakasi"></div>
+                     <div class="yan-deste" id="deste-alani-benim"></div>
                 </div>
             </div>
-            <div class="oyun-butonlari">
-                <button id="perleri-grupla-btn" class="oyun-butonu ikincil-buton">Perleri Grupla</button>
-                <button id="cifte-bit-btn" class="oyun-butonu ikincil-buton hidden">Çifte Bit</button>
-                <button id="bit-btn" class="oyun-butonu hidden">Normal Bit</button>
+            <div id="oda-sag-panel">
+                <div id="sohbet-kutusu">
+                    <h3>Sohbet</h3>
+                    <ul id="sohbet-mesajlari"></ul>
+                    <div class="sohbet-input-alani">
+                        <input type="text" id="sohbet-input" placeholder="Mesajınızı yazın...">
+                        <button id="sohbet-gonder-btn"><i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                </div>
+                <div class="oyun-butonlari">
+                    <button id="hazir-btn" class="oyun-butonu">Hazır</button>
+                    <button id="perleri-grupla-btn" class="oyun-butonu ikincil-buton hidden">Perleri Grupla</button>
+                    <button id="cifte-bit-btn" class="oyun-butonu ikincil-buton hidden">Çifte Bit</button>
+                    <button id="bit-btn" class="oyun-butonu hidden">Normal Bit</button>
+                </div>
             </div>
         </div>
     </div>
@@ -98,6 +124,7 @@
         </div>
     </div>
 
+    <canvas id="konfeti-canvas"></canvas>
     <div id="toast-container"></div>
 
     <audio id="ses-cek" src="/sounds/cek.mp3"></audio>
