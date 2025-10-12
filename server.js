@@ -1,115 +1,108 @@
 // ==================================================================
 // 1. GEREKLİ MODÜLLERİN YÜKLENMESİ
 // ==================================================================
-// Express: Web sunucusu oluşturmak için temel framework.
 const express = require('express');
-
-// http: Express uygulamasını çalıştıracak olan standart Node.js sunucusu.
 const http = require('http');
-
-// socket.io: Gerçek zamanlı iletişimi (WebSocket) yönetecek olan kütüphane.
 const { Server } = require("socket.io");
-
-// cors: Farklı domain'lerden (kökenlerden) gelen isteklere izin vermek için kullanılır.
-// Tarayıcı güvenliği (Cross-Origin Resource Sharing) için zorunludur.
 const cors = require('cors');
-
 
 // ==================================================================
 // 2. SUNUCU VE UYGULAMA KURULUMU
 // ==================================================================
-// Express uygulamasını oluşturuyoruz.
 const app = express();
-
-// Express uygulamasını kullanarak bir HTTP sunucusu oluşturuyoruz.
-// Socket.IO'nun çalışması için bu gereklidir.
 const server = http.createServer(app);
-
 
 // ==================================================================
 // 3. GÜVENLİK (CORS) AYARLARI
 // ==================================================================
-// Bu ayar, sunucunuza SADECE 'https://kaplanvip.com.tr' adresinden gelen
-// bağlantı isteklerinin kabul edilmesini sağlar. Başka bir web sitesi
-// sizin sunucunuza bağlanmaya çalışırsa, bu istek reddedilir.
+// Sunucunuza SADECE bu adreslerden gelen isteklere izin verilir.
+const allowedOrigins = ["https://okey-1.onrender.com", "https://kaplanvip.com.tr"];
 
-// Express için CORS ayarı (API istekleri için gelecekte gerekebilir)
-app.use(cors({
-    origin: "https://kaplanvip.com.tr"
-}));
+const corsOptions = {
+    origin: (origin, callback) => {
+        // Mobil uygulamalar veya sunucu içi istekler için `!origin` kontrolü
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Bu site tarafından CORS erişimine izin verilmiyor.'));
+        }
+    }
+};
 
-// Socket.IO sunucusunu oluştururken CORS ayarlarını da belirtiyoruz. Bu en önemli kısım!
+app.use(cors(corsOptions));
+
 const io = new Server(server, {
     cors: {
-        origin: "https://kaplanvip.com.tr", // Sadece bu adresten gelen bağlantılara izin ver
-        methods: ["GET", "POST"]      // İzin verilen HTTP metotları
+        origin: allowedOrigins,
+        methods: ["GET", "POST"]
     }
 });
-
 
 // ==================================================================
 // 4. STATİK DOSYA SERVİSİ (MIDDLEWARE)
 // ==================================================================
-// 'public' adındaki klasörümüzün içindeki HTML, CSS ve client.js gibi
-// dosyalara dışarıdan erişilebilmesini sağlıyoruz.
 app.use(express.static('public'));
-
 
 // ==================================================================
 // 5. UYGULAMA GENELİ DEĞİŞKENLER (STATE)
 // ==================================================================
-// Sunucuya bağlı olan tüm online kullanıcıları saklayacağımız nesne.
-// Yapısı: { socket.id: 'kullanici_adi', ... } şeklinde olacak.
 let onlineKullanicilar = {};
-
+let odalar = {};
 
 // ==================================================================
 // 6. SOCKET.IO BAĞLANTI MANTIĞI
 // ==================================================================
-// 'connection' olayı, bir istemci (tarayıcı) sunucuya başarıyla bağlandığında tetiklenir.
 io.on('connection', (socket) => {
-
-    // Geliştirme için hangi kullanıcının bağlandığını konsola yazdıralım.
     console.log(`✅ Bir kullanıcı bağlandı: ${socket.id}`);
 
-    // İstemciden 'yeniKullaniciGeldi' olayı geldiğinde...
-    socket.on('yeniKullaniciGeldi', (kullaniciAdi) => {
-        // Gelen kullanıcıyı online listemize ekliyoruz.
-        onlineKullanicilar[socket.id] = kullaniciAdi;
-        console.log(`   -> ${kullaniciAdi} ismiyle lobiye katıldı.`);
+    // Yeni bağlanan kullanıcıya mevcut oda listesini gönder
+    socket.emit('odaListesiGuncelle', Object.values(odalar));
 
-        // Online kullanıcı listesi değiştiği için, bu yeni listeyi
-        // bağlı olan TÜM istemcilere 'onlineKullaniciListesiGuncelle' olayı ile gönderiyoruz.
-        // Object.values() ile sadece kullanıcı isimlerini [ 'Ali', 'Ayşe' ] şeklinde bir diziye çeviriyoruz.
+    // Lobiye yeni bir kullanıcı katıldığında
+    socket.on('yeniKullaniciGeldi', (kullaniciAdi) => {
+        onlineKullanicilar[socket.id] = kullaniciAdi;
+        console.log(`-> ${kullaniciAdi} ismiyle lobiye katıldı.`);
         io.emit('onlineKullaniciListesiGuncelle', Object.values(onlineKullanicilar));
     });
 
-    // 'disconnect' olayı, bir istemcinin bağlantısı koptuğunda (sayfayı kapattığında vs.) tetiklenir.
+    // Yeni bir oda kurulduğunda
+    socket.on('odaKur', (odaAdi) => {
+        const kurucuAdi = onlineKullanicilar[socket.id];
+        if (!kurucuAdi) return; // İsimsiz kullanıcı oda kuramaz
+
+        if (!odaAdi || odalar[odaAdi]) {
+            console.log(`⚠️ ${kurucuAdi} tarafından geçersiz oda kurma denemesi: ${odaAdi}`);
+            // İsteğe bağlı: Kullanıcıya hata mesajı gönderilebilir
+            // socket.emit('hataMesaji', 'Bu oda adı zaten alınmış veya geçersiz.');
+            return;
+        }
+
+        odalar[odaAdi] = {
+            adi: odaAdi,
+            oyuncular: [kurucuAdi],
+            kurucu: kurucuAdi
+        };
+        console.log(`🏠 Yeni oda kuruldu: '${odaAdi}' - Kurucu: ${kurucuAdi}`);
+
+        // Herkese güncel oda listesini gönder
+        io.emit('odaListesiGuncelle', Object.values(odalar));
+    });
+
+    // Bir kullanıcı bağlantıyı kestiğinde
     socket.on('disconnect', () => {
         const ayrilanKullanici = onlineKullanicilar[socket.id];
-
-        // Eğer kullanıcı isim girerek listeye dahil olmuşsa...
         if (ayrilanKullanici) {
             console.log(`❌ Kullanıcı ayrıldı: ${ayrilanKullanici} (${socket.id})`);
-
-            // Kullanıcıyı online listesinden siliyoruz.
             delete onlineKullanicilar[socket.id];
-
-            // Liste tekrar değiştiği için, güncel listeyi TÜM istemcilere tekrar gönderiyoruz.
             io.emit('onlineKullaniciListesiGuncelle', Object.values(onlineKullanicilar));
-        } else {
-            // Eğer kullanıcı isim girmeden sayfayı kapattıysa
-            console.log(`❌ İsimsiz bir bağlantı kesildi: ${socket.id}`);
+            // İleride: Kullanıcıyı odadan çıkarma mantığı eklenecek.
         }
     });
 });
 
-
 // ==================================================================
 // 7. SUNUCUYU BAŞLATMA
 // ==================================================================
-// Render gibi platformlar için port numarasını ortam değişkeninden (environment variable)
-// almasını sağlıyoruz. Eğer yerelde çalışıyorsak 3000 portunu kullanacak.
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`🚀 Sunucu ${PORT} portunda başarıyla başlatıldı ve dinlemede...`);
