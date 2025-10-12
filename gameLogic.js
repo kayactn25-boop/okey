@@ -39,11 +39,8 @@ class OkeyGame {
         let gostergeAdayi = null, denemeIndex = 0;
         do { gostergeAdayi = this.deste[denemeIndex++]; } while (gostergeAdayi.renk === 'sahte');
         this.gosterge = gostergeAdayi;
-
         let okeySayi = this.gosterge.sayi === 13 ? 1 : this.gosterge.sayi + 1;
         this.okeyTasi = { renk: this.gosterge.renk, sayi: okeySayi };
-
-        // Destede sahte okeyleri gerçek okeyin yerine geçecek şekilde ayarla
         this.deste.forEach(tas => {
             if (tas.renk === 'sahte') {
                 tas.sayi = this.okeyTasi.sayi;
@@ -63,7 +60,7 @@ class OkeyGame {
         });
         this.ortaDeste = this.deste;
     }
-    
+
     ortadanCek(oyuncuAdi) {
         if (this.oyuncular[this.siraKimdeIndex] !== oyuncuAdi || this.ortaDeste.length === 0) return null;
         const cekilenTas = this.ortaDeste.pop();
@@ -71,23 +68,34 @@ class OkeyGame {
         return cekilenTas;
     }
 
+    yandanCek(oyuncuAdi) {
+        if (this.oyuncular[this.siraKimdeIndex] !== oyuncuAdi || !this.sonAtilanTas) return null;
+        const cekilenTas = this.sonAtilanTas;
+        this.sonAtilanTas = null;
+        this.eller[oyuncuAdi].push(cekilenTas);
+        return cekilenTas;
+    }
+
     tasAt(oyuncuAdi, tasId) {
         if (this.oyuncular[this.siraKimdeIndex] !== oyuncuAdi) return false;
         const el = this.eller[oyuncuAdi];
-        if (el.length % 3 !== 0) return false; // Elinde 15, 12, 9... taş yoksa atamaz
-        
+        if (el.length % 3 !== 0) return false;
         const atilanTasIndex = el.findIndex(t => t.id === tasId);
         if (atilanTasIndex === -1) return false;
-
         const atilanTas = el.splice(atilanTasIndex, 1)[0];
         this.atilanTaslar[oyuncuAdi].push(atilanTas);
         this.sonAtilanTas = atilanTas;
         this.sirayiIlerlet();
-        return atilanTas; // Atılan taşı geri döndür
+        return atilanTas;
     }
 
     sirayiIlerlet() {
         this.siraKimdeIndex = (this.siraKimdeIndex + 1) % 4;
+    }
+
+    eliDogrula(el) {
+        console.log("UYARI: El doğrulama mantığı henüz tam olarak geliştirilmedi. Her bitiş geçerli sayılıyor.");
+        return true;
     }
 
     getGameState() {
@@ -97,7 +105,8 @@ class OkeyGame {
             atilanTaslar: this.atilanTaslar,
             gosterge: this.gosterge,
             okeyTasi: this.okeyTasi,
-            ortaDesteSayisi: this.ortaDeste.length
+            ortaDesteSayisi: this.ortaDeste.length,
+            sonAtilanTas: this.sonAtilanTas
         };
     }
 }

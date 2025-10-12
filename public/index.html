@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js" defer></script>
 </head>
 <body>
     <div id="oyun-odasi-ekrani" class="hidden">
@@ -21,22 +22,33 @@
             </div>
         </div>
         <div id="ana-oyun-alani">
-            <div class="rakip-istaka-ust" id="oyuncu-alani-2"></div>
-            <div class="rakip-istaka-sol" id="oyuncu-alani-3"></div>
+            <div id="ust-oyuncu-alani" class="rakip-alani"></div>
+            <div id="sol-oyuncu-alani" class="rakip-alani"></div>
             <div id="orta-masa">
                 <div class="yan-deste" id="deste-alani-3"></div>
                 <div id="orta-deste-alani">
                     <div id="gosterge-alani"></div>
-                    <div id="orta-deste" class="hedef"><span>Ortadan Çek</span><span id="orta-deste-sayisi">106</span></div>
+                    <div id="orta-deste" class="hedef"><span>Ortadan Çek</span><span id="orta-deste-sayisi"></span></div>
                 </div>
                 <div class="yan-deste" id="deste-alani-1"></div>
             </div>
-            <div class="rakip-istaka-sag" id="oyuncu-alani-4"></div>
+            <div id="sag-oyuncu-alani" class="rakip-alani"></div>
             <div id="benim-alanim">
-                <div class="yan-deste" id="deste-alani-2"></div>
-                <div class="yan-deste" id="deste-alani-4"></div>
-                <div id="mevcut-oyuncu-istakasi"></div>
+                 <div class="yan-deste" id="deste-alani-2"></div>
+                 <div class="yan-deste" id="deste-alani-4"></div>
             </div>
+             <div id="mevcut-oyuncu-istakasi"></div>
+        </div>
+        <div id="oda-sag-panel">
+            <div id="sohbet-kutusu">
+                <h3>Sohbet</h3>
+                <ul id="sohbet-mesajlari"></ul>
+                <div class="sohbet-input-alani">
+                    <input type="text" id="sohbet-input" placeholder="Mesajınızı yazın...">
+                    <button id="sohbet-gonder-btn">Gönder</button>
+                </div>
+            </div>
+            <button id="bit-btn" class="oyun-butonu hidden">Okey / Bit</button>
         </div>
     </div>
 
@@ -56,6 +68,15 @@
             </div>
             <h2>Online Oyuncular</h2>
             <ul id="online-kullanicilar-listesi"></ul>
+        </div>
+    </div>
+
+    <div id="oyun-bitti-modal" class="modal-arkaplan hidden">
+        <div class="modal-icerik">
+            <h2 id="kazanan-bilgisi">Oyuncu Kazandı!</h2>
+            <p>Kazanan El:</p>
+            <div id="kazanan-el" class="istaka-goster"></div>
+            <button id="lobiye-don-btn">Lobiye Dön</button>
         </div>
     </div>
 

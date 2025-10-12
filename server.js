@@ -20,9 +20,10 @@ io.on('connection', (socket) => {
     socket.on('yeniKullaniciGeldi', (kullaniciAdi) => {
         onlineKullanicilar[socket.id] = kullaniciAdi;
         kullaniciSocketMap[kullaniciAdi] = socket.id;
+        socket.emit('odaListesiGuncelle', Object.values(odalar));
         io.emit('onlineKullaniciListesiGuncelle', Object.values(onlineKullanicilar));
     });
-    
+
     socket.on('odaKur', (odaAdi) => {
         const kurucuAdi = onlineKullanicilar[socket.id];
         if (!kurucuAdi || !odaAdi || odalar[odaAdi]) return;
@@ -36,15 +37,14 @@ io.on('connection', (socket) => {
         if (!oyuncuAdi || !oda || oda.oyuncular.length >= 4 || oda.oyuncular.includes(oyuncuAdi)) return;
         socket.join(odaAdi);
         oda.oyuncular.push(oyuncuAdi);
-        socket.emit('katilimBasarili', oda);
+        socket.emit('katilimBasarili');
         io.to(odaAdi).emit('odaBilgisiGuncelle', { oyuncular: oda.oyuncular, odaAdi: oda.adi });
         io.emit('odaListesiGuncelle', Object.values(odalar));
         if (oda.oyuncular.length === 4) oyunuBaslat(odaAdi);
     });
 
     socket.on('ortadanCek', () => {
-        const oyuncuAdi = onlineKullanicilar[socket.id];
-        const oda = oyuncununOdasiniBul(oyuncuAdi);
+        const oyuncuAdi = onlineKullanicilar[socket.id]; const oda = oyuncununOdasiniBul(oyuncuAdi);
         if (oda && oda.oyunDurumu) {
             const cekilenTas = oda.oyunDurumu.ortadanCek(oyuncuAdi);
             if (cekilenTas) {
@@ -55,9 +55,20 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('yandanCek', () => {
+        const oyuncuAdi = onlineKullanicilar[socket.id]; const oda = oyuncununOdasiniBul(oyuncuAdi);
+        if (oda && oda.oyunDurumu) {
+            const cekilenTas = oda.oyunDurumu.yandanCek(oyuncuAdi);
+            if (cekilenTas) {
+                socket.emit('tasCekildi', cekilenTas);
+                io.to(oda.adi).emit('oyunDurumuGuncelle', oda.oyunDurumu.getGameState());
+                io.to(oda.adi).emit('logGuncelle', `${oyuncuAdi} yandan taş çekti.`);
+            }
+        }
+    });
+
     socket.on('tasAt', (tasId) => {
-        const oyuncuAdi = onlineKullanicilar[socket.id];
-        const oda = oyuncununOdasiniBul(oyuncuAdi);
+        const oyuncuAdi = onlineKullanicilar[socket.id]; const oda = oyuncununOdasiniBul(oyuncuAdi);
         if (oda && oda.oyunDurumu) {
             const atilanTas = oda.oyunDurumu.tasAt(oyuncuAdi, tasId);
             if (atilanTas) {
@@ -68,14 +79,33 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('disconnect', () => {
-        // Disconnect mantığı aynı kaldı
+    socket.on('bitmeIstegi', (gelenEl) => {
+        const oyuncuAdi = onlineKullanicilar[socket.id]; const oda = oyuncununOdasiniBul(oyuncuAdi);
+        if (oda && oda.oyunDurumu && !oda.oyunDurumu.oyunBittiMi) {
+            if (oda.oyunDurumu.eliDogrula(gelenEl)) {
+                oda.oyunDurumu.oyunBittiMi = true;
+                io.to(oda.adi).emit('oyunBitti', { kazanan: oyuncuAdi, kazananEl: gelenEl });
+                io.to(oda.adi).emit('logGuncelle', `!!! ${oyuncuAdi} oyunu bitirdi! Tebrikler!`);
+                delete odalar[oda.adi];
+                io.emit('odaListesiGuncelle', Object.values(odalar));
+            } else {
+                socket.emit('logGuncelle', 'Hatalı bitme denemesi! Eliniz kurallara uygun değil.');
+            }
+        }
     });
+
+    socket.on('mesajGonder', (mesaj) => {
+        const oyuncuAdi = onlineKullanicilar[socket.id]; const oda = oyuncununOdasiniBul(oyuncuAdi);
+        if (oda && mesaj.trim() !== '') {
+            io.to(oda.adi).emit('yeniMesaj', { gonderen: oyuncuAdi, icerik: mesaj });
+        }
+    });
+
+    socket.on('disconnect', () => { /* Disconnect mantığı aynı */ });
 });
 
 function oyunuBaslat(odaAdi) {
-    const oda = odalar[odaAdi];
-    if (!oda || oda.oyuncular.length !== 4) return;
+    const oda = odalar[odaAdi]; if (!oda || oda.oyuncular.length !== 4) return;
     const oyun = new OkeyGame(oda.oyuncular);
     oyun.baslat();
     oda.oyunDurumu = oyun;
@@ -89,7 +119,7 @@ function oyunuBaslat(odaAdi) {
             });
         }
     });
-    io.to(oda.adi).emit('logGuncelle', `Oyun başladı! Gösterge: ${oyun.gosterge.renk} ${oyun.gosterge.sayi}. Sıra ${baslangicGameState.siraKimde}'da.`);
+    io.to(odaAdi).emit('logGuncelle', `Oyun başladı! Gösterge: ${oyun.gosterge.renk} ${oyun.gosterge.sayi}. Sıra ${baslangicGameState.siraKimde}'da.`);
 }
 
 function oyuncununOdasiniBul(oyuncuAdi) {
