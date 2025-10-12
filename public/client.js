@@ -17,6 +17,7 @@ const odaListesiElementi = document.getElementById('oda-listesi');
 const odaAdiInput = document.getElementById('oda-adi-input');
 const odaKurBtn = document.getElementById('oda-kur-btn');
 const odaAdiBaslik = document.getElementById('oda-adi-baslik');
+const benimIstakamElementi = document.getElementById('mevcut-oyuncu-istakasi');
 
 // Lobi Eventleri
 odaKurBtn.addEventListener('click', () => {
@@ -35,47 +36,47 @@ odaListesiElementi.addEventListener('click', (event) => {
 // Sunucudan Gelen Mesajları Dinleme
 socket.on('onlineKullaniciListesiGuncelle', (kullanicilar) => {
     kullaniciListesiElementi.innerHTML = '';
-    kullanicilar.forEach(k => {
-        const li = document.createElement('li');
-        li.textContent = k;
-        kullaniciListesiElementi.appendChild(li);
-    });
+    kullanicilar.forEach(k => { const li = document.createElement('li'); li.textContent = k; kullaniciListesiElementi.appendChild(li); });
 });
 
 socket.on('odaListesiGuncelle', (guncelOdalar) => {
     odaListesiElementi.innerHTML = '';
     guncelOdalar.forEach(oda => {
         const li = document.createElement('li');
-        const katilButonuHTML = oda.oyuncular.length >= 4 
-            ? '<button disabled>Dolu</button>' 
-            : `<button class="katil-btn" data-oda-adi="${oda.adi}">Katıl</button>`;
+        const katilButonuHTML = oda.oyuncular.length >= 4 ? '<button disabled>Dolu</button>' : `<button class="katil-btn" data-oda-adi="${oda.adi}">Katıl</button>`;
         li.innerHTML = `<span>${oda.adi} (${oda.oyuncular.length}/4)</span>${katilButonuHTML}`;
         odaListesiElementi.appendChild(li);
     });
 });
 
 socket.on('katilimBasarili', (oda) => {
-    console.log(`'${oda.adi}' odasına başarıyla katıldınız.`);
     lobiEkrani.classList.add('hidden');
     oyunOdasiEkrani.classList.remove('hidden');
 });
 
 socket.on('odaBilgisiGuncelle', (oda) => {
-    console.log('Oda bilgisi güncellendi:', oda);
     odaAdiBaslik.textContent = oda.adi;
-    
-    const oyuncuAlanlari = [
-        document.getElementById('oyuncu-1'),
-        document.getElementById('oyuncu-2'),
-        document.getElementById('oyuncu-3'),
-        document.getElementById('oyuncu-4')
-    ];
-
+    const oyuncuAlanlari = [document.getElementById('oyuncu-1'), document.getElementById('oyuncu-2'), document.getElementById('oyuncu-3'), document.getElementById('oyuncu-4')];
     oyuncuAlanlari.forEach((alan, index) => {
-        if (oda.oyuncular[index]) {
-            alan.textContent = oda.oyuncular[index];
-        } else {
-            alan.textContent = `Oyuncu ${index + 1} Bekleniyor...`;
-        }
+        alan.textContent = oda.oyuncular[index] ? oda.oyuncular[index] : `Oyuncu ${index + 1} Bekleniyor...`;
     });
 });
+
+// OYUN BAŞLADIĞINDA ÇALIŞACAK YENİ OLAY DİNLEYİCİ
+socket.on('oyunBasladi', (data) => {
+    console.log("Oyun başladı! İşte eliniz:", data.el);
+    document.getElementById('orta-desteler').textContent = 'Oyun Başladı!';
+    istakayiCiz(data.el);
+});
+
+// Gelen taşları alıp ekrandaki ıstakaya çizen fonksiyon
+function istakayiCiz(el) {
+    benimIstakamElementi.innerHTML = ''; // Istakayı temizle
+    el.forEach(tas => {
+        const tasElementi = document.createElement('div');
+        tasElementi.classList.add('tas', `tas-${tas.renk}`);
+        tasElementi.textContent = tas.sayi;
+        tasElementi.dataset.id = tas.id; // Taşa kimlik ver
+        benimIstakamElementi.appendChild(tasElementi);
+    });
+}

@@ -1,168 +1,45 @@
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background-color: #f0f2f5;
-    margin: 0;
-    padding: 20px;
-    color: #333;
-}
-.container {
-    display: flex;
-    gap: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-#oyun-alani {
-    flex-grow: 1;
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-#yan-panel {
-    flex-basis: 280px;
-    flex-shrink: 0;
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-h2 {
-    margin-top: 0;
-    border-bottom: 1px solid #ddd;
-    padding-bottom: 10px;
-    font-size: 1.2em;
-}
-#oda-yonetimi {
-    margin-bottom: 25px;
-}
-#oda-kur-formu {
-    display: flex;
-    margin-bottom: 15px;
-}
-#oda-adi-input {
-    flex-grow: 1;
-    border: 1px solid #ccc;
-    padding: 8px;
-    border-radius: 4px 0 0 4px;
-    outline: none;
-}
-#oda-adi-input:focus {
-    border-color: #007bff;
-}
-#oda-kur-btn {
-    border: none;
-    background-color: #28a745;
-    color: white;
-    padding: 8px 12px;
-    cursor: pointer;
-    border-radius: 0 4px 4px 0;
-    font-weight: bold;
-}
-#oda-kur-btn:hover {
-    background-color: #218838;
-}
-#oda-listesi, #online-kullanicilar-listesi {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-    max-height: 200px;
-    overflow-y: auto;
-}
-#oda-listesi li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    border: 1px solid #eee;
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; color: #333; }
+.container { display: flex; gap: 20px; max-width: 1200px; margin: 0 auto; }
+#oyun-alani { flex-grow: 1; background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+#yan-panel { flex-basis: 280px; flex-shrink: 0; background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+h2 { margin-top: 0; border-bottom: 1px solid #ddd; padding-bottom: 10px; font-size: 1.2em; }
+#oda-yonetimi { margin-bottom: 25px; }
+#oda-kur-formu { display: flex; margin-bottom: 15px; }
+#oda-adi-input { flex-grow: 1; border: 1px solid #ccc; padding: 8px; border-radius: 4px 0 0 4px; outline: none; }
+#oda-adi-input:focus { border-color: #007bff; }
+#oda-kur-btn { border: none; background-color: #28a745; color: white; padding: 8px 12px; cursor: pointer; border-radius: 0 4px 4px 0; font-weight: bold; }
+#oda-kur-btn:hover { background-color: #218838; }
+#oda-listesi, #online-kullanicilar-listesi { list-style-type: none; padding: 0; margin: 0; max-height: 200px; overflow-y: auto; }
+#oda-listesi li { display: flex; justify-content: space-between; align-items: center; padding: 10px; border: 1px solid #eee; border-radius: 4px; margin-bottom: 5px; background-color: #f8f9fa; }
+#oda-listesi li button { border: none; background-color: #007bff; color: white; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.9em; }
+#oda-listesi li button:disabled { background-color: #6c757d; cursor: not-allowed; }
+#online-kullanicilar-listesi li { padding: 8px 12px; border-radius: 6px; margin-bottom: 5px; background-color: #e7f3ff; color: #0d6efd; font-weight: 500; }
+.hidden { display: none !important; }
+#oyun-odasi-ekrani { max-width: 1000px; margin: 20px auto; padding: 20px; background-color: #006400; color: white; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+.oda-basligi { text-align: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid rgba(255,255,255,0.3); }
+.oyun-masasi { display: flex; flex-direction: column; align-items: center; }
+.masa-ortasi { display: flex; justify-content: space-between; width: 100%; align-items: center; }
+#orta-desteler { width: 400px; height: 200px; background-color: #004d00; border: 2px dashed rgba(255,255,255,0.4); border-radius: 10px; display: flex; justify-content: center; align-items: center; font-size: 1.5em; font-weight: bold; }
+.oyuncu-alani { padding: 15px; background-color: rgba(0,0,0,0.3); border-radius: 8px; text-align: center; min-width: 150px; margin: 10px; }
+#mevcut-oyuncu-istakasi { margin-top: 20px; padding: 10px; background-color: #8B4513; border-radius: 10px; min-height: 100px; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 5px; }
+
+/* ========= YENİ TAŞ STİLLERİ ========= */
+.tas {
+    width: 40px;
+    height: 60px;
+    background-color: #f2e5c3; /* Krem rengi */
+    border: 1px solid #333;
     border-radius: 4px;
-    margin-bottom: 5px;
-    background-color: #f8f9fa;
-}
-#oda-listesi li button {
-    border: none;
-    background-color: #007bff;
-    color: white;
-    padding: 5px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9em;
-}
-#oda-listesi li button:disabled {
-    background-color: #6c757d;
-    cursor: not-allowed;
-}
-#online-kullanicilar-listesi li {
-    padding: 8px 12px;
-    border-radius: 6px;
-    margin-bottom: 5px;
-    background-color: #e7f3ff;
-    color: #0d6efd;
-    font-weight: 500;
-}
-
-/* Gizleme/Gösterme için yardımcı sınıf */
-.hidden {
-    display: none !important;
-}
-
-/* ========= OYUN ODASI STİLLERİ ========= */
-#oyun-odasi-ekrani {
-    max-width: 1000px;
-    margin: 20px auto;
-    padding: 20px;
-    background-color: #006400; /* Koyu yeşil masa rengi */
-    color: white;
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-}
-
-.oda-basligi {
-    text-align: center;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid rgba(255,255,255,0.3);
-}
-
-.oyun-masasi {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.masa-ortasi {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    align-items: center;
-}
-
-#orta-desteler {
-    width: 400px;
-    height: 200px;
-    background-color: #004d00;
-    border: 2px dashed rgba(255,255,255,0.4);
-    border-radius: 10px;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 1.5em;
+    font-size: 24px;
     font-weight: bold;
+    cursor: pointer;
+    user-select: none;
 }
-
-.oyuncu-alani {
-    padding: 15px;
-    background-color: rgba(0,0,0,0.3);
-    border-radius: 8px;
-    text-align: center;
-    min-width: 150px;
-    margin: 10px;
-}
-
-#mevcut-oyuncu-istakasi {
-    margin-top: 20px;
-    padding: 20px;
-    background-color: #8B4513; /* Istaka rengi */
-    border-radius: 10px;
-    min-height: 100px;
-    text-align: center;
-}
+.tas-sari { color: #f5b000; }
+.tas-mavi { color: #007bff; }
+.tas-siyah { color: #212529; }
+.tas-kirmizi { color: #dc3545; }
+.tas-sahte { color: #28a745; }
