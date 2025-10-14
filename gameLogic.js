@@ -10,7 +10,7 @@ class OkeyGame {
         this.sonAtilanTas = null;
         this.oyunBittiMi = false;
         this.hazirOyuncular = new Set();
-        this.turnTimer = null; // Sıra zamanlayıcısı için eklendi
+        this.turnTimer = null;
     }
 
     baslat() {
@@ -80,7 +80,7 @@ class OkeyGame {
     tasAt(oyuncuAdi, tasId) {
         if (this.oyuncular[this.siraKimdeIndex] !== oyuncuAdi) return false;
         const el = this.eller[oyuncuAdi];
-        if (el.length % 3 === 0) return false; // Elinde 15, 12, 9... taş olmalı
+        if (el.length % 3 === 0) return false;
         const atilanTasIndex = el.findIndex(t => t.id === tasId);
         if (atilanTasIndex === -1) return false;
         const atilanTas = el.splice(atilanTasIndex, 1)[0];
@@ -145,7 +145,7 @@ class OkeyGame {
             }
 
             // 3'lü Aynı Sayılı Per denemesi
-            const ayniSayililar = kalanlar.filter(t => t.sayi === t1.sayi);
+            const ayniSayililar = kalanlar.filter(t => t.sayi === t1.sayi && t.renk !== t1.renk);
             if (ayniSayililar.length >= 2) {
                 const renkSeti = new Set([t1.renk, ayniSayililar[0].renk, ayniSayililar[1].renk]);
                 if (renkSeti.size === 3) {
@@ -154,7 +154,6 @@ class OkeyGame {
                 }
             }
     
-            // Okey kullanarak per denemesi
             if (okeyAdedi > 0) {
                 // 2 taş + 1 okey ile sıralı
                 if (t2_sirali) {
@@ -166,11 +165,14 @@ class OkeyGame {
                      const yeniKalanlar = kalanlar.filter(t => t.id !== t3_alternatif.id);
                      if(perlereAyrilabilirMi(yeniKalanlar, okeyAdedi - 1)) return true;
                 }
-
                 // 2 taş + 1 okey ile aynı sayılı
                 if (ayniSayililar.length >= 1) {
                     const yeniKalanlar = kalanlar.filter(t => t.id !== ayniSayililar[0].id);
                     if (perlereAyrilabilirMi(yeniKalanlar, okeyAdedi - 1)) return true;
+                }
+                // 1 taş + 2 okey
+                if (okeyAdedi >= 2) {
+                    if (perlereAyrilabilirMi(kalanlar, okeyAdedi - 2)) return true;
                 }
             }
     

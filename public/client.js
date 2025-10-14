@@ -165,14 +165,16 @@ async function socketBaglantisiKur() {
     });
     socket.on('siraBasladi', (data) => {
         if (siraZamanlayiciInterval) clearInterval(siraZamanlayiciInterval);
-        document.querySelectorAll('.sira-zamanlayici').forEach(el => el.style.width = '100%');
+        document.querySelectorAll('.sira-zamanlayici').forEach(el => {
+            el.style.transition = 'none';
+            el.style.width = '100%';
+        });
         const zamanlayiciEl = document.querySelector(`#oyuncu-kutusu-${data.oyuncu} .sira-zamanlayici`);
         if(zamanlayiciEl) {
-            let kalanSure = data.sure;
-            zamanlayiciEl.style.transition = `width ${kalanSure}s linear`;
-            requestAnimationFrame(() => {
+            setTimeout(() => {
+                zamanlayiciEl.style.transition = `width ${data.sure}s linear`;
                 zamanlayiciEl.style.width = '0%';
-            });
+            }, 100);
         }
     });
     socket.on('oyunDurumuGuncelle', (gameState) => {
@@ -334,9 +336,9 @@ function tasiElementeCevir(tas, tıklanabilir) {
                 const hedefEl = document.getElementById(`deste-alani-${['benim', 'sag', 'ust', 'sol'][benimIndexim]}`);
                 tasAnimasyonu(tas, el, hedefEl);
                 setTimeout(() => {
+                    socket.emit('tasAt', { tasId: tas.id });
                     benimElim = benimElim.filter(t => t.id !== tas.id);
                     istakayiCiz(false);
-                    socket.emit('tasAt', { tasId: tas.id });
                 }, 50);
             }
         });

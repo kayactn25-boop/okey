@@ -225,23 +225,28 @@ function siraZamanlayicisiniYenidenBaslat(oda) {
     io.to(oda.adi).emit('siraBasladi', { oyuncu: oda.oyun.oyuncular[oda.oyun.siraKimdeIndex], sure: 30 });
 
     oda.oyun.turnTimer = setTimeout(() => {
-        if (oda.oyun.oyunBittiMi) return;
+        if (!oda.oyun || oda.oyun.oyunBittiMi) return;
         
         const siradakiOyuncu = oda.oyun.oyuncular[oda.oyun.siraKimdeIndex];
         const oyuncuEli = oda.oyun.eller[siradakiOyuncu];
+        const oyuncuSocketId = kullaniciSocketMap[siradakiOyuncu].id;
 
         if (oyuncuEli.length % 3 !== 0) { // Taş çekmemiş
             const cekilenTas = oda.oyun.ortadanCek(siradakiOyuncu);
-            if(cekilenTas) io.to(kullaniciSocketMap[siradakiOyuncu].id).emit('tasCekildi', { tas: cekilenTas, kaynak: 'orta-deste' });
+            if(cekilenTas && oyuncuSocketId) {
+                io.to(oyuncuSocketId).emit('tasCekildi', { tas: cekilenTas, kaynak: 'orta-deste' });
+            }
         }
         
-        // Elindeki en işe yaramaz taşı bul ve at
-        const atilacakTas = oyuncuEli[oyuncuEli.length - 1]; // Basitçe en sondakini at
-        oda.oyun.tasAt(siradakiOyuncu, atilacakTas.id);
+        setTimeout(() => { // Çekme animasyonuna zaman tanı
+            const guncelEli = oda.oyun.eller[siradakiOyuncu];
+            const atilacakTas = guncelEli[guncelEli.length - 1]; // Basitçe en sondakini at
+            oda.oyun.tasAt(siradakiOyuncu, atilacakTas.id);
 
-        io.to(oda.adi).emit('oyunDurumuGuncelle', oda.oyun.getGameState());
-        io.to(oda.adi).emit('logGuncelle', `${siradakiOyuncu} süresi dolduğu için otomatik taş attı.`);
-        siraZamanlayicisiniYenidenBaslat(oda);
+            io.to(oda.adi).emit('oyunDurumuGuncelle', oda.oyun.getGameState());
+            io.to(oda.adi).emit('logGuncelle', `${siradakiOyuncu} süresi dolduğu için otomatik taş attı.`);
+            siraZamanlayicisiniYenidenBaslat(oda);
+        }, 500);
 
     }, 30000); // 30 saniye
 }
