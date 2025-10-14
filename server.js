@@ -45,7 +45,7 @@ app.post('/login', async (req, res) => {
         if (result.rows.length === 0) return res.status(401).json({ message: 'Kullanıcı bulunamadı.' });
         const user = result.rows[0];
         if (!await bcrypt.compare(password, user.sifre)) return res.status(401).json({ message: 'Hatalı şifre.' });
-        res.status(200).json({ message: 'Giriş başarılı!', user: { id: user.id, username: user.kullanici_adi, skor: user.skor } });
+        res.status(200).json({ message: 'Giriş başarılı!', user: { id: user.id, username: user.kullanici_adi, skor: user.skor, avatar: user.avatar, seviye: user.seviye, xp: user.xp, para: user.para } });
     } catch (error) {
         res.status(500).json({ message: 'Sunucu hatası.' });
     }
@@ -61,25 +61,25 @@ app.get('/leaderboard', async (req, res) => {
 
 io.on('connection', (socket) => {
     socket.on('yeniKullaniciGeldi', (userData) => {
-        onlineKullanicilar[socket.id] = userData.username;
+        onlineKullanicilar[socket.id] = { username: userData.username, id: userData.id };
         kullaniciSocketMap[userData.username] = { id: socket.id, timeout: null };
         socket.emit('odaListesiGuncelle', Object.values(odalar));
-        io.emit('onlineKullaniciListesiGuncelle', Object.values(onlineKullanicilar));
+        io.emit('onlineKullaniciListesiGuncelle', Object.values(onlineKullanicilar).map(u => u.username));
     });
 
     socket.on('odaKur', (odaAdi) => {
-        const kurucuAdi = onlineKullanicilar[socket.id];
-        if (!kurucuAdi || !odaAdi || odalar[odaAdi]) return;
-        odalar[odaAdi] = { adi: odaAdi, oyuncular: [], kurucu: kurucuAdi, oyun: null };
+        const kurucu = onlineKullanicilar[socket.id];
+        if (!kurucu || !odaAdi || odalar[odaAdi]) return;
+        odalar[odaAdi] = { adi: odaAdi, oyuncular: [], kurucu: kurucu.username, oyun: null };
         io.emit('odaListesiGuncelle', Object.values(odalar));
     });
 
     socket.on('odayaKatil', (odaAdi) => {
-        const oyuncuAdi = onlineKullanicilar[socket.id];
+        const oyuncu = onlineKullanicilar[socket.id];
         const oda = odalar[odaAdi];
-        if (!oyuncuAdi || !oda || oda.oyuncular.length >= 4 || oda.oyuncular.includes(oyuncuAdi)) return;
+        if (!oyuncu || !oda || oda.oyuncular.length >= 4 || oda.oyuncular.includes(oyuncu.username)) return;
         socket.join(odaAdi);
-        oda.oyuncular.push(oyuncuAdi);
+        oda.oyuncular.push(oyuncu.username);
         socket.emit('katilimBasarili');
         const hazirOyuncular = oda.oyun ? Array.from(oda.oyun.hazirOyuncular) : [];
         io.to(odaAdi).emit('odaBilgisiGuncelle', { oyuncular: oda.oyuncular, odaAdi: oda.adi, hazirOyuncular });
@@ -91,11 +91,11 @@ io.on('connection', (socket) => {
     });
     
     socket.on('hazirim', () => {
-        const oyuncuAdi = onlineKullanicilar[socket.id]; const oda = oyuncununOdasiniBul(oyuncuAdi);
+        const oyuncu = onlineKullanicilar[socket.id]; const oda = oyuncununOdasiniBul(oyuncu.username);
         if(oda && oda.oyun && !oda.oyun.oyunBittiMi) {
-            oda.oyun.hazirOyuncular.add(oyuncuAdi);
+            oda.oyun.hazirOyuncular.add(oyuncu.username);
             io.to(oda.adi).emit('hazirDurumuGuncelle', Array.from(oda.oyun.hazirOyuncular));
-            io.to(oda.adi).emit('logGuncelle', `${oyuncuAdi} hazır. (${oda.oyun.hazirOyuncular.size}/4)`);
+            io.to(oda.adi).emit('logGuncelle', `${oyuncu.username} hazır. (${oda.oyun.hazirOyuncular.size}/4)`);
             if(oda.oyuncular.length === 4 && oda.oyun.hazirOyuncular.size === 4) {
                 oyunuBaslat(oda.adi);
             }
@@ -103,59 +103,62 @@ io.on('connection', (socket) => {
     });
 
     socket.on('ortadanCek', (data) => {
-        const oyuncuAdi = onlineKullanicilar[socket.id]; const oda = oyuncununOdasiniBul(oyuncuAdi);
+        const oyuncu = onlineKullanicilar[socket.id]; const oda = oyuncununOdasiniBul(oyuncu.username);
         if (oda && oda.oyun) {
-            const cekilenTas = oda.oyun.ortadanCek(oyuncuAdi);
+            const cekilenTas = oda.oyun.ortadanCek(oyuncu.username);
             if (cekilenTas) {
                 socket.emit('tasCekildi', { tas: cekilenTas, kaynak: data.kaynak });
                 io.to(oda.adi).emit('oyunDurumuGuncelle', oda.oyun.getGameState());
-                io.to(oda.adi).emit('logGuncelle', `${oyuncuAdi} ortadan bir taş çekti.`);
+                io.to(oda.adi).emit('logGuncelle', `${oyuncu.username} ortadan bir taş çekti.`);
                 siraZamanlayicisiniYenidenBaslat(oda);
             }
         }
     });
 
     socket.on('yandanCek', (data) => {
-        const oyuncuAdi = onlineKullanicilar[socket.id]; const oda = oyuncununOdasiniBul(oyuncuAdi);
+        const oyuncu = onlineKullanicilar[socket.id]; const oda = oyuncununOdasiniBul(oyuncu.username);
         if (oda && oda.oyun) {
-            const cekilenTas = oda.oyun.yandanCek(oyuncuAdi);
+            const cekilenTas = oda.oyun.yandanCek(oyuncu.username);
             if (cekilenTas) {
                 socket.emit('tasCekildi', { tas: cekilenTas, kaynak: data.kaynak });
                 io.to(oda.adi).emit('oyunDurumuGuncelle', oda.oyun.getGameState());
-                io.to(oda.adi).emit('logGuncelle', `${oyuncuAdi} yandan taş çekti.`);
+                io.to(oda.adi).emit('logGuncelle', `${oyuncu.username} yandan taş çekti.`);
                 siraZamanlayicisiniYenidenBaslat(oda);
             }
         }
     });
 
     socket.on('tasAt', (data) => {
-        const oyuncuAdi = onlineKullanicilar[socket.id]; const oda = oyuncununOdasiniBul(oyuncuAdi);
+        const oyuncu = onlineKullanicilar[socket.id]; const oda = oyuncununOdasiniBul(oyuncu.username);
         if (oda && oda.oyun) {
-            const atilanTas = oda.oyun.tasAt(oyuncuAdi, data.tasId);
+            const atilanTas = oda.oyun.tasAt(oyuncu.username, data.tasId);
             if (atilanTas) {
                 const sonrakiOyuncu = oda.oyun.oyuncular[oda.oyun.siraKimdeIndex];
-                io.to(oda.adi).emit('tasAtildiAnimasyonu', { oyuncu: oyuncuAdi, hedef: data.hedef, tas: atilanTas });
+                io.to(oda.adi).emit('tasAtildiAnimasyonu', { oyuncu: oyuncu.username, hedef: data.hedef, tas: atilanTas });
                 io.to(oda.adi).emit('oyunDurumuGuncelle', oda.oyun.getGameState());
-                io.to(oda.adi).emit('logGuncelle', `${oyuncuAdi}, ${atilanTas.renk} ${atilanTas.sayi} attı. Sıra ${sonrakiOyuncu}'da.`);
+                io.to(oda.adi).emit('logGuncelle', `${oyuncu.username}, ${atilanTas.renk} ${atilanTas.sayi} attı. Sıra ${sonrakiOyuncu}'da.`);
                 siraZamanlayicisiniYenidenBaslat(oda);
             }
         }
     });
 
     socket.on('bitmeIstegi', async (data) => {
-        const oyuncuAdi = onlineKullanicilar[socket.id];
-        const oda = oyuncununOdasiniBul(oyuncuAdi);
+        const oyuncu = onlineKullanicilar[socket.id];
+        const oda = oyuncununOdasiniBul(oyuncu.username);
         if (oda && oda.oyun && !oda.oyun.oyunBittiMi) {
             const elGecerliMi = oda.oyun.eliDogrula(data.el, data.ciftMi);
             if (elGecerliMi) {
                 if(oda.oyun.turnTimer) clearTimeout(oda.oyun.turnTimer);
                 oda.oyun.oyunBittiMi = true;
-                let puan = data.ciftMi ? 4 : 2;
+                let puan = data.ciftMi ? 40 : 20; // XP puanları
                 if (data.okeyMiAtti) puan *= 2;
-                try {
-                    await dbPool.query('UPDATE kullanicilar SET skor = skor + $1 WHERE kullanici_adi = $2', [puan, oyuncuAdi]);
+                
+                try { // Puan ve XP'yi veritabanına kaydet
+                    await dbPool.query('UPDATE kullanicilar SET skor = skor + 1, xp = xp + $1 WHERE id = $2', [puan, oyuncu.id]);
+                    // Seviye atlama mantığı eklenebilir
                 } catch (error) { console.error('Puan kaydedilemedi:', error); }
-                io.to(oda.adi).emit('oyunBitti', { kazanan: oyuncuAdi, kazananEl: data.el, mesaj: `Oyunu ${data.ciftMi ? 'çifte biterek' : (data.okeyMiAtti ? 'okey atarak' : 'normal')} bitirdi! (+${puan} Puan)` });
+
+                io.to(oda.adi).emit('oyunBitti', { kazanan: oyuncu.username, kazananEl: data.el, mesaj: `Oyunu ${data.ciftMi ? 'çifte biterek' : (data.okeyMiAtti ? 'okey atarak' : 'normal')} bitirdi! (+${puan} XP)` });
                 delete odalar[oda.adi];
                 io.emit('odaListesiGuncelle', Object.values(odalar));
             } else {
@@ -167,33 +170,34 @@ io.on('connection', (socket) => {
     socket.on('odadanAyril', () => socket.disconnect());
 
     socket.on('mesajGonder', (mesaj) => {
-        const oyuncuAdi = onlineKullanicilar[socket.id]; const oda = oyuncununOdasiniBul(oyuncuAdi);
+        const oyuncu = onlineKullanicilar[socket.id];
+        const oda = oyuncununOdasiniBul(oyuncu.username);
         if (oda && mesaj.trim() !== '') {
-            io.to(oda.adi).emit('yeniMesaj', { gonderen: oyuncuAdi, icerik: mesaj });
+            io.to(oda.adi).emit('yeniMesaj', { gonderen: oyuncu.username, icerik: mesaj });
         }
     });
 
     socket.on('disconnect', () => {
-        const ayrilanKullanici = onlineKullanicilar[socket.id];
-        if (!ayrilanKullanici) return;
-        const oda = oyuncununOdasiniBul(ayrilanKullanici);
-        console.log(`❌ Kullanıcı ayrıldı: ${ayrilanKullanici}`);
+        const ayrilan = onlineKullanicilar[socket.id];
+        if (!ayrilan) return;
+        const oda = oyuncununOdasiniBul(ayrilan.username);
+        console.log(`❌ Kullanıcı ayrıldı: ${ayrilan.username}`);
         
         delete onlineKullanicilar[socket.id];
-        delete kullaniciSocketMap[ayrilanKullanici];
-        io.emit('onlineKullaniciListesiGuncelle', Object.values(onlineKullanicilar));
+        delete kullaniciSocketMap[ayrilan.username];
+        io.emit('onlineKullaniciListesiGuncelle', Object.values(onlineKullanicilar).map(u => u.username));
 
         if (oda) {
             if (oda.oyun && !oda.oyun.oyunBittiMi) {
                 if(oda.oyun.turnTimer) clearTimeout(oda.oyun.turnTimer);
                 oda.oyun.oyunBittiMi = true;
-                io.to(oda.adi).emit('oyunBitti', { kazanan: null, kazananEl: [], mesaj: `${ayrilanKullanici} oyundan ayrıldığı için oyun dağıldı.` });
+                io.to(oda.adi).emit('oyunBitti', { kazanan: null, kazananEl: [], mesaj: `${ayrilan.username} oyundan ayrıldığı için oyun dağıldı.` });
                 delete odalar[oda.adi];
             } else {
                 if(oda.oyun) {
-                    oda.oyun.hazirOyuncular.delete(ayrilanKullanici);
+                    oda.oyun.hazirOyuncular.delete(ayrilan.username);
                 }
-                oda.oyuncular = oda.oyuncular.filter(p => p !== ayrilanKullanici);
+                oda.oyuncular = oda.oyuncular.filter(p => p !== ayrilan.username);
                 const hazirOyuncular = oda.oyun ? Array.from(oda.oyun.hazirOyuncular) : [];
                 io.to(oda.adi).emit('odaBilgisiGuncelle', { oyuncular: oda.oyuncular, odaAdi: oda.adi, hazirOyuncular });
             }
@@ -238,9 +242,9 @@ function siraZamanlayicisiniYenidenBaslat(oda) {
             }
         }
         
-        setTimeout(() => { // Çekme animasyonuna zaman tanı
+        setTimeout(() => {
             const guncelEli = oda.oyun.eller[siradakiOyuncu];
-            if (guncelEli.length % 3 === 0) { // Eğer hala taş çekmemişse (hata durumu)
+            if (guncelEli.length % 3 !== 0) { // Hata durumu
                  siraZamanlayicisiniYenidenBaslat(oda); 
                  return;
             }

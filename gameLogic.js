@@ -135,7 +135,7 @@ class OkeyGame {
             const kalanlar = taslar.slice(1);
     
             if (kalanlar.length >= 2) {
-                // 3'lü Sıralı Per denemesi
+                // 3'lü Sıralı Per
                 const t2_sirali = kalanlar.find(t => t.renk === t1.renk && t.sayi === t1.sayi + 1);
                 if (t2_sirali) {
                     const t3_sirali = kalanlar.find(t => t.renk === t1.renk && t.sayi === t1.sayi + 2);
@@ -145,7 +145,7 @@ class OkeyGame {
                     }
                 }
 
-                // 3'lü Aynı Sayılı Per denemesi
+                // 3'lü Aynı Sayılı Per
                 const ayniSayililar = kalanlar.filter(t => t.sayi === t1.sayi && t.renk !== t1.renk);
                 if (ayniSayililar.length >= 2) {
                     const renkSeti = new Set([t1.renk, ayniSayililar[0].renk, ayniSayililar[1].renk]);
@@ -159,9 +159,9 @@ class OkeyGame {
             if (okeyAdedi > 0) {
                 // 2 taş + 1 okey ile sıralı
                 if (kalanlar.length >= 1) {
-                    const t2 = kalanlar.find(t => t.renk === t1.renk && t.sayi === t1.sayi + 2);
-                    if (t2) {
-                         const yeniKalanlar = kalanlar.filter(t => t.id !== t2.id);
+                    const t2_sirali_alternatif = kalanlar.find(t => t.renk === t1.renk && t.sayi === t1.sayi + 2);
+                    if (t2_sirali_alternatif) {
+                         const yeniKalanlar = kalanlar.filter(t => t.id !== t2_sirali_alternatif.id);
                          if(perlereAyrilabilirMi(yeniKalanlar, okeyAdedi - 1)) return true;
                     }
                 }
