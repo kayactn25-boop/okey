@@ -242,7 +242,7 @@ function oyunArayuzuOlaylariniBaslat() {
     document.getElementById('sohbet-input').addEventListener('keyup', (e) => { if (e.key === 'Enter') mesajGonder(); });
     document.getElementById('bit-btn').addEventListener('click', () => bitmeIstegiGonder(false));
     document.getElementById('cifte-bit-btn').addEventListener('click', () => bitmeIstegiGonder(true));
-    document.getElementById('perleri-grupla-btn').addEventListener('click', () => istakayiCiz(true, true));
+    document.getElementById('perleri-grupla-btn').addEventListener('click', () => istakayiCiz(true, true)); // Bu fonksiyonu daha sonra dolduracağız.
     document.getElementById('odadan-ayril-btn').addEventListener('click', () => socket.emit('odadanAyril'));
     document.getElementById('lobiye-don-btn').addEventListener('click', () => window.location.reload());
     document.getElementById('hazir-btn').addEventListener('click', () => {
@@ -335,10 +335,15 @@ function tasiElementeCevir(tas, tıklanabilir) {
                 const benimIndexim = mevcutOyunDurumu.oyuncular.indexOf(currentUser.username);
                 const hedefEl = document.getElementById(`deste-alani-${['benim', 'sag', 'ust', 'sol'][benimIndexim]}`);
                 tasAnimasyonu(tas, el, hedefEl);
+                
+                // Önce animasyon başlasın, sonra taşı elden çıkarıp socket'e haber verelim.
                 setTimeout(() => {
-                    socket.emit('tasAt', { tasId: tas.id });
-                    benimElim = benimElim.filter(t => t.id !== tas.id);
+                    const tasIndex = benimElim.findIndex(t => t.id === tas.id);
+                    if (tasIndex > -1) {
+                         benimElim.splice(tasIndex, 1);
+                    }
                     istakayiCiz(false);
+                    socket.emit('tasAt', { tasId: tas.id });
                 }, 50);
             }
         });
@@ -405,4 +410,33 @@ function tasAnimasyonu(tasData, baslangicEl, bitisEl) {
         if(document.body.contains(tasElementi)) document.body.removeChild(tasElementi);
     }, 500);
 }
-function konfetiYagdir() { /* Boş fonksiyon */ }
+function konfetiYagdir() {
+    const canvas = document.getElementById('konfeti-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const konfetiler = [];
+    for(let i = 0; i < 100; i++) {
+        konfetiler.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height - canvas.height,
+            size: Math.random() * 5 + 2,
+            speed: Math.random() * 3 + 2,
+            color: `hsl(${Math.random() * 360}, 100%, 50%)`
+        });
+    }
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        konfetiler.forEach(k => {
+            k.y += k.speed;
+            ctx.fillStyle = k.color;
+            ctx.fillRect(k.x, k.y, k.size, k.size * 2);
+        });
+        if(konfetiler.some(k => k.y < canvas.height)) {
+            requestAnimationFrame(animate);
+        } else {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+    }
+    animate();
+}

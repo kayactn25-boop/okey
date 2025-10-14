@@ -229,7 +229,7 @@ function siraZamanlayicisiniYenidenBaslat(oda) {
         
         const siradakiOyuncu = oda.oyun.oyuncular[oda.oyun.siraKimdeIndex];
         const oyuncuEli = oda.oyun.eller[siradakiOyuncu];
-        const oyuncuSocketId = kullaniciSocketMap[siradakiOyuncu].id;
+        const oyuncuSocketId = kullaniciSocketMap[siradakiOyuncu] ? kullaniciSocketMap[siradakiOyuncu].id : null;
 
         if (oyuncuEli.length % 3 !== 0) { // Taş çekmemiş
             const cekilenTas = oda.oyun.ortadanCek(siradakiOyuncu);
@@ -240,6 +240,10 @@ function siraZamanlayicisiniYenidenBaslat(oda) {
         
         setTimeout(() => { // Çekme animasyonuna zaman tanı
             const guncelEli = oda.oyun.eller[siradakiOyuncu];
+            if (guncelEli.length % 3 === 0) { // Eğer hala taş çekmemişse (hata durumu)
+                 siraZamanlayicisiniYenidenBaslat(oda); 
+                 return;
+            }
             const atilacakTas = guncelEli[guncelEli.length - 1]; // Basitçe en sondakini at
             oda.oyun.tasAt(siradakiOyuncu, atilacakTas.id);
 

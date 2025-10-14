@@ -134,42 +134,47 @@ class OkeyGame {
             const t1 = taslar[0];
             const kalanlar = taslar.slice(1);
     
-            // 3'lü Sıralı Per denemesi
-            const t2_sirali = kalanlar.find(t => t.renk === t1.renk && t.sayi === t1.sayi + 1);
-            if (t2_sirali) {
-                const t3_sirali = kalanlar.find(t => t.renk === t1.renk && t.sayi === t1.sayi + 2);
-                if (t3_sirali) {
-                    const yeniKalanlar = kalanlar.filter(t => t.id !== t2_sirali.id && t.id !== t3_sirali.id);
-                    if (perlereAyrilabilirMi(yeniKalanlar, okeyAdedi)) return true;
+            if (kalanlar.length >= 2) {
+                // 3'lü Sıralı Per denemesi
+                const t2_sirali = kalanlar.find(t => t.renk === t1.renk && t.sayi === t1.sayi + 1);
+                if (t2_sirali) {
+                    const t3_sirali = kalanlar.find(t => t.renk === t1.renk && t.sayi === t1.sayi + 2);
+                    if (t3_sirali) {
+                        const yeniKalanlar = kalanlar.filter(t => t.id !== t2_sirali.id && t.id !== t3_sirali.id);
+                        if (perlereAyrilabilirMi(yeniKalanlar, okeyAdedi)) return true;
+                    }
                 }
-            }
 
-            // 3'lü Aynı Sayılı Per denemesi
-            const ayniSayililar = kalanlar.filter(t => t.sayi === t1.sayi && t.renk !== t1.renk);
-            if (ayniSayililar.length >= 2) {
-                const renkSeti = new Set([t1.renk, ayniSayililar[0].renk, ayniSayililar[1].renk]);
-                if (renkSeti.size === 3) {
-                    const yeniKalanlar = kalanlar.filter(t => t.id !== ayniSayililar[0].id && t.id !== ayniSayililar[1].id);
-                    if (perlereAyrilabilirMi(yeniKalanlar, okeyAdedi)) return true;
+                // 3'lü Aynı Sayılı Per denemesi
+                const ayniSayililar = kalanlar.filter(t => t.sayi === t1.sayi && t.renk !== t1.renk);
+                if (ayniSayililar.length >= 2) {
+                    const renkSeti = new Set([t1.renk, ayniSayililar[0].renk, ayniSayililar[1].renk]);
+                    if (renkSeti.size === 3) {
+                        const yeniKalanlar = kalanlar.filter(t => t.id !== ayniSayililar[0].id && t.id !== ayniSayililar[1].id);
+                        if (perlereAyrilabilirMi(yeniKalanlar, okeyAdedi)) return true;
+                    }
                 }
             }
     
             if (okeyAdedi > 0) {
                 // 2 taş + 1 okey ile sıralı
-                if (t2_sirali) {
-                    const yeniKalanlar = kalanlar.filter(t => t.id !== t2_sirali.id);
-                    if (perlereAyrilabilirMi(yeniKalanlar, okeyAdedi - 1)) return true;
+                if (kalanlar.length >= 1) {
+                    const t2 = kalanlar.find(t => t.renk === t1.renk && t.sayi === t1.sayi + 2);
+                    if (t2) {
+                         const yeniKalanlar = kalanlar.filter(t => t.id !== t2.id);
+                         if(perlereAyrilabilirMi(yeniKalanlar, okeyAdedi - 1)) return true;
+                    }
                 }
-                const t3_alternatif = kalanlar.find(t => t.renk === t1.renk && t.sayi === t1.sayi + 2);
-                if (t3_alternatif) {
-                     const yeniKalanlar = kalanlar.filter(t => t.id !== t3_alternatif.id);
-                     if(perlereAyrilabilirMi(yeniKalanlar, okeyAdedi - 1)) return true;
-                }
+                
                 // 2 taş + 1 okey ile aynı sayılı
-                if (ayniSayililar.length >= 1) {
-                    const yeniKalanlar = kalanlar.filter(t => t.id !== ayniSayililar[0].id);
-                    if (perlereAyrilabilirMi(yeniKalanlar, okeyAdedi - 1)) return true;
+                if (kalanlar.length >= 1) {
+                    const t2_ayni = kalanlar.find(t => t.sayi === t1.sayi && t.renk !== t1.renk);
+                    if(t2_ayni) {
+                        const yeniKalanlar = kalanlar.filter(t => t.id !== t2_ayni.id);
+                        if (perlereAyrilabilirMi(yeniKalanlar, okeyAdedi - 1)) return true;
+                    }
                 }
+
                 // 1 taş + 2 okey
                 if (okeyAdedi >= 2) {
                     if (perlereAyrilabilirMi(kalanlar, okeyAdedi - 2)) return true;
