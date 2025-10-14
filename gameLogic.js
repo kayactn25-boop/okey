@@ -10,6 +10,7 @@ class OkeyGame {
         this.sonAtilanTas = null;
         this.oyunBittiMi = false;
         this.hazirOyuncular = new Set();
+        this.turnTimer = null; // Sıra zamanlayıcısı için eklendi
     }
 
     baslat() {
@@ -93,14 +94,13 @@ class OkeyGame {
         this.siraKimdeIndex = (this.siraKimdeIndex + 1) % 4;
     }
 
-    // GERÇEK VE HİLE KORUMALI EL DOĞRULAMA ALGORİTMASI
     eliDogrula(el, ciftMi) {
         if (el.length !== 14) return false;
-
+    
         const elKopya = JSON.parse(JSON.stringify(el));
         const okeyler = elKopya.filter(t => t.isOkey);
         const normalTaslar = elKopya.filter(t => !t.isOkey);
-
+    
         if (ciftMi) {
             let ciftSayisi = 0;
             let kalanOkey = okeyler.length;
@@ -109,76 +109,77 @@ class OkeyGame {
                 const anahtar = `${t.renk}-${t.sayi}`;
                 sayac.set(anahtar, (sayac.get(anahtar) || 0) + 1);
             });
-
+    
             for (const count of sayac.values()) {
-                if (count >= 2) {
-                    ciftSayisi += Math.floor(count / 2);
-                }
+                ciftSayisi += Math.floor(count / 2);
             }
             
             let tekler = 0;
             for (const count of sayac.values()) {
-                if (count % 2 !== 0) {
-                    tekler++;
-                }
+                if (count % 2 !== 0) tekler++;
             }
-
+    
             ciftSayisi += Math.min(tekler, kalanOkey);
             kalanOkey -= Math.min(tekler, kalanOkey);
             ciftSayisi += Math.floor(kalanOkey / 2);
-
+    
             return ciftSayisi === 7;
         }
-
-        // Normal Bitiş (Backtracking Algoritması)
-        normalTaslar.sort((a, b) => a.sayi - b.sayi || a.renk.localeCompare(b.renk));
-
-        const perlereAyrilabilir = (kalanTaslar, okeyAdedi) => {
-            if (kalanTaslar.length === 0) return true;
-
-            const t1 = kalanTaslar[0];
-            const digerTaslar = kalanTaslar.slice(1);
-            const gerekliOkey = 3 - (kalanTaslar.length);
-            if(okeyAdedi >= gerekliOkey && gerekliOkey > 0) return true;
-
+    
+        normalTaslar.sort((a, b) => a.renk.localeCompare(b.renk) || a.sayi - b.sayi);
+    
+        const perlereAyrilabilirMi = (taslar, okeyAdedi) => {
+            if (taslar.length === 0) return true;
+    
+            const t1 = taslar[0];
+            const kalanlar = taslar.slice(1);
+    
             // 3'lü Sıralı Per denemesi
-            const t2_sirali = digerTaslar.find(t => t.renk === t1.renk && t.sayi === t1.sayi + 1);
-            const t3_sirali = digerTaslar.find(t => t.renk === t1.renk && t.sayi === t1.sayi + 2);
-            if (t2_sirali && t3_sirali) {
-                const yeniKalanlar = digerTaslar.filter(t => t.id !== t2_sirali.id && t.id !== t3_sirali.id);
-                if (perlereAyrilabilir(yeniKalanlar, okeyAdedi)) return true;
+            const t2_sirali = kalanlar.find(t => t.renk === t1.renk && t.sayi === t1.sayi + 1);
+            if (t2_sirali) {
+                const t3_sirali = kalanlar.find(t => t.renk === t1.renk && t.sayi === t1.sayi + 2);
+                if (t3_sirali) {
+                    const yeniKalanlar = kalanlar.filter(t => t.id !== t2_sirali.id && t.id !== t3_sirali.id);
+                    if (perlereAyrilabilirMi(yeniKalanlar, okeyAdedi)) return true;
+                }
             }
 
             // 3'lü Aynı Sayılı Per denemesi
-            const ayniSayililar = digerTaslar.filter(t => t.sayi === t1.sayi && t.renk !== t1.renk);
+            const ayniSayililar = kalanlar.filter(t => t.sayi === t1.sayi);
             if (ayniSayililar.length >= 2) {
                 const renkSeti = new Set([t1.renk, ayniSayililar[0].renk, ayniSayililar[1].renk]);
                 if (renkSeti.size === 3) {
-                    const yeniKalanlar = digerTaslar.filter(t => t.id !== ayniSayililar[0].id && t.id !== ayniSayililar[1].id);
-                    if (perlereAyrilabilir(yeniKalanlar, okeyAdedi)) return true;
+                    const yeniKalanlar = kalanlar.filter(t => t.id !== ayniSayililar[0].id && t.id !== ayniSayililar[1].id);
+                    if (perlereAyrilabilirMi(yeniKalanlar, okeyAdedi)) return true;
                 }
             }
-
+    
             // Okey kullanarak per denemesi
             if (okeyAdedi > 0) {
-                // 2 taş + 1 okey ile sıralı per
+                // 2 taş + 1 okey ile sıralı
                 if (t2_sirali) {
-                    const yeniKalanlar = digerTaslar.filter(t => t.id !== t2_sirali.id);
-                    if (perlereAyrilabilir(yeniKalanlar, okeyAdedi - 1)) return true;
+                    const yeniKalanlar = kalanlar.filter(t => t.id !== t2_sirali.id);
+                    if (perlereAyrilabilirMi(yeniKalanlar, okeyAdedi - 1)) return true;
                 }
+                const t3_alternatif = kalanlar.find(t => t.renk === t1.renk && t.sayi === t1.sayi + 2);
+                if (t3_alternatif) {
+                     const yeniKalanlar = kalanlar.filter(t => t.id !== t3_alternatif.id);
+                     if(perlereAyrilabilirMi(yeniKalanlar, okeyAdedi - 1)) return true;
+                }
+
                 // 2 taş + 1 okey ile aynı sayılı
                 if (ayniSayililar.length >= 1) {
-                    const yeniKalanlar = digerTaslar.filter(t => t.id !== ayniSayililar[0].id);
-                    if (perlereAyrilabilir(yeniKalanlar, okeyAdedi - 1)) return true;
+                    const yeniKalanlar = kalanlar.filter(t => t.id !== ayniSayililar[0].id);
+                    if (perlereAyrilabilirMi(yeniKalanlar, okeyAdedi - 1)) return true;
                 }
             }
-            
+    
             return false;
         };
-        
-        return perlereAyrilabilir(normalTaslar, okeyler.length);
+    
+        return perlereAyrilabilirMi(normalTaslar, okeyler.length);
     }
-
+    
     getGameState() {
         let oyuncuElSayilari = {};
         this.oyuncular.forEach(p => {

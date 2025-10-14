@@ -1,8 +1,8 @@
 :root { --ana-font: 'Poppins', sans-serif; --masa-yesili: #0a5c36; --koyu-yesil: #064428; --panel-bg: #ffffff; --font-rengi: #333; --vurgu-sarisi: #ffc107; --istaka-rengi: #5c4033; --tas-krem: #f5f5dc; --golge: 0 4px 6px rgba(0,0,0,0.1); --hata-rengi: #dc3545; --bilgi-rengi: #007bff; --basari-rengi: #28a745; }
 body { font-family: var(--ana-font); margin: 0; background-color: #e9ecef; color: var(--font-rengi); overflow: hidden; transition: background-color 0.3s, color 0.3s; }
 body.dark-mode { --panel-bg: #212529; --font-rengi: #f8f9fa; --istaka-rengi: #3a2720; background-color: #343a40; }
-body.dark-mode .lobi-yan-panel, body.dark-mode .lobi-oyun-alani { background-color: #343a40; color: #f8f9fa; }
-body.dark-mode input { background-color: #495057; color: #f8f9fa; border-color: #6c757d; }
+body.dark-mode .lobi-yan-panel, body.dark-mode .lobi-oyun-alani, body.dark-mode .ust-bar, body.dark-mode #oda-sol-panel, body.dark-mode #oda-sag-panel { background-color: #343a40; color: #f8f9fa; }
+body.dark-mode input, body.dark-mode .modal-icerik { background-color: #495057; color: #f8f9fa; border-color: #6c757d; }
 body.dark-mode #leaderboard table { color: #f8f9fa; }
 body.dark-mode #leaderboard th { background-color: #495057; }
 body.dark-mode #leaderboard tr:nth-child(even) { background-color: #3a4149; }
@@ -87,8 +87,9 @@ body.dark-mode .giris-kutusu { background-color: #343a40; color: #f8f9fa; }
 .oyun-butonu:disabled { background-color: #6c757d; cursor: not-allowed; opacity: 0.7; }
 #bit-btn, #hazir-btn { background-color: var(--basari-rengi); }
 .ikincil-buton { background-color: #6c757d; }
-.tehlike-butonu { background-color: var(--hata-rengi); }
+.tehlike-butonu { background-color: var(--hata-rengi); margin-top: 20px; }
 .oyuncu-kutusu.hazir .oyuncu-ismi::after { content: '✓'; color: var(--basari-rengi); margin-left: 5px; font-weight: bold; }
+.sira-zamanlayici { height: 5px; background-color: var(--vurgu-sarisi); width: 100%; border-radius: 5px; }
 
 /* MODAL & TOAST & ANİMASYON */
 .modal-arkaplan { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; animation: fadeIn 0.3s; }

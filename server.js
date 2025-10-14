@@ -110,6 +110,7 @@ io.on('connection', (socket) => {
                 socket.emit('tasCekildi', { tas: cekilenTas, kaynak: data.kaynak });
                 io.to(oda.adi).emit('oyunDurumuGuncelle', oda.oyun.getGameState());
                 io.to(oda.adi).emit('logGuncelle', `${oyuncuAdi} ortadan bir taş çekti.`);
+                siraZamanlayicisiniYenidenBaslat(oda);
             }
         }
     });
@@ -122,6 +123,7 @@ io.on('connection', (socket) => {
                 socket.emit('tasCekildi', { tas: cekilenTas, kaynak: data.kaynak });
                 io.to(oda.adi).emit('oyunDurumuGuncelle', oda.oyun.getGameState());
                 io.to(oda.adi).emit('logGuncelle', `${oyuncuAdi} yandan taş çekti.`);
+                siraZamanlayicisiniYenidenBaslat(oda);
             }
         }
     });
@@ -135,6 +137,7 @@ io.on('connection', (socket) => {
                 io.to(oda.adi).emit('tasAtildiAnimasyonu', { oyuncu: oyuncuAdi, hedef: data.hedef, tas: atilanTas });
                 io.to(oda.adi).emit('oyunDurumuGuncelle', oda.oyun.getGameState());
                 io.to(oda.adi).emit('logGuncelle', `${oyuncuAdi}, ${atilanTas.renk} ${atilanTas.sayi} attı. Sıra ${sonrakiOyuncu}'da.`);
+                siraZamanlayicisiniYenidenBaslat(oda);
             }
         }
     });
@@ -145,6 +148,7 @@ io.on('connection', (socket) => {
         if (oda && oda.oyun && !oda.oyun.oyunBittiMi) {
             const elGecerliMi = oda.oyun.eliDogrula(data.el, data.ciftMi);
             if (elGecerliMi) {
+                if(oda.oyun.turnTimer) clearTimeout(oda.oyun.turnTimer);
                 oda.oyun.oyunBittiMi = true;
                 let puan = data.ciftMi ? 4 : 2;
                 if (data.okeyMiAtti) puan *= 2;
@@ -181,6 +185,7 @@ io.on('connection', (socket) => {
 
         if (oda) {
             if (oda.oyun && !oda.oyun.oyunBittiMi) {
+                if(oda.oyun.turnTimer) clearTimeout(oda.oyun.turnTimer);
                 oda.oyun.oyunBittiMi = true;
                 io.to(oda.adi).emit('oyunBitti', { kazanan: null, kazananEl: [], mesaj: `${ayrilanKullanici} oyundan ayrıldığı için oyun dağıldı.` });
                 delete odalar[oda.adi];
@@ -211,6 +216,34 @@ function oyunuBaslat(odaAdi) {
         }
     });
     io.to(oda.adi).emit('logGuncelle', `Oyun başladı! Gösterge: ${oda.oyun.gosterge.renk} ${oda.oyun.gosterge.sayi}. Sıra ${baslangicGameState.siraKimde}'da.`);
+    siraZamanlayicisiniYenidenBaslat(oda);
+}
+
+function siraZamanlayicisiniYenidenBaslat(oda) {
+    if (oda.oyun.turnTimer) clearTimeout(oda.oyun.turnTimer);
+
+    io.to(oda.adi).emit('siraBasladi', { oyuncu: oda.oyun.oyuncular[oda.oyun.siraKimdeIndex], sure: 30 });
+
+    oda.oyun.turnTimer = setTimeout(() => {
+        if (oda.oyun.oyunBittiMi) return;
+        
+        const siradakiOyuncu = oda.oyun.oyuncular[oda.oyun.siraKimdeIndex];
+        const oyuncuEli = oda.oyun.eller[siradakiOyuncu];
+
+        if (oyuncuEli.length % 3 !== 0) { // Taş çekmemiş
+            const cekilenTas = oda.oyun.ortadanCek(siradakiOyuncu);
+            if(cekilenTas) io.to(kullaniciSocketMap[siradakiOyuncu].id).emit('tasCekildi', { tas: cekilenTas, kaynak: 'orta-deste' });
+        }
+        
+        // Elindeki en işe yaramaz taşı bul ve at
+        const atilacakTas = oyuncuEli[oyuncuEli.length - 1]; // Basitçe en sondakini at
+        oda.oyun.tasAt(siradakiOyuncu, atilacakTas.id);
+
+        io.to(oda.adi).emit('oyunDurumuGuncelle', oda.oyun.getGameState());
+        io.to(oda.adi).emit('logGuncelle', `${siradakiOyuncu} süresi dolduğu için otomatik taş attı.`);
+        siraZamanlayicisiniYenidenBaslat(oda);
+
+    }, 30000); // 30 saniye
 }
 
 function oyuncununOdasiniBul(oyuncuAdi) {

@@ -6,6 +6,7 @@ let benimElim = [];
 let mevcutOyunDurumu = null;
 let sortableIstaka = null;
 let sesAcik = true;
+let siraZamanlayiciInterval = null;
 
 const sesler = { cek: document.getElementById('ses-cek'), at: document.getElementById('ses-at'), kazan: document.getElementById('ses-kazan') };
 
@@ -117,7 +118,7 @@ async function socketBaglantisiKur() {
             const div = document.createElement('div');
             div.className = 'oyuncu-kutusu';
             div.id = `oyuncu-kutusu-${oyuncu}`;
-            div.innerHTML = `<div class="oyuncu-avatar"></div><span class="oyuncu-ismi">${oyuncu}</span>`;
+            div.innerHTML = `<div class="oyuncu-avatar"></div><span class="oyuncu-ismi">${oyuncu}</span><div class="sira-zamanlayici"></div>`;
             if (data.hazirOyuncular.includes(oyuncu)) div.classList.add('hazir');
             panel.appendChild(div);
         });
@@ -162,6 +163,18 @@ async function socketBaglantisiKur() {
              tasAnimasyonu(data.tas, baslangicEl, bitisEl);
         }
     });
+    socket.on('siraBasladi', (data) => {
+        if (siraZamanlayiciInterval) clearInterval(siraZamanlayiciInterval);
+        document.querySelectorAll('.sira-zamanlayici').forEach(el => el.style.width = '100%');
+        const zamanlayiciEl = document.querySelector(`#oyuncu-kutusu-${data.oyuncu} .sira-zamanlayici`);
+        if(zamanlayiciEl) {
+            let kalanSure = data.sure;
+            zamanlayiciEl.style.transition = `width ${kalanSure}s linear`;
+            requestAnimationFrame(() => {
+                zamanlayiciEl.style.width = '0%';
+            });
+        }
+    });
     socket.on('oyunDurumuGuncelle', (gameState) => {
         const siraBendeMiydi = mevcutOyunDurumu && mevcutOyunDurumu.siraKimde === currentUser.username;
         mevcutOyunDurumu = gameState;
@@ -181,6 +194,7 @@ async function socketBaglantisiKur() {
         logListesi.prepend(li);
     });
     socket.on('oyunBitti', (data) => {
+        if (siraZamanlayiciInterval) clearInterval(siraZamanlayiciInterval);
         document.getElementById('kazanan-bilgisi').textContent = data.kazanan ? `${data.kazanan} Kazandı!` : "Oyun Bitti!";
         document.getElementById('bitis-mesaji').textContent = data.mesaj;
         const kazananElAlani = document.getElementById('kazanan-el');
@@ -257,13 +271,11 @@ function oyunDurumunuCiz(gameState) {
     const pozisyonMap = ['benim', 'sag', 'ust', 'sol'];
     gameState.oyuncular.forEach((oyuncu, index) => {
         const atilanlar = gameState.atilanTaslar[oyuncu];
-        if (atilanlar && atilanlar.length > 0) {
-            const oyuncuPozisyonu = (index - benimIndexim + 4) % 4;
-            const desteAlani = document.getElementById(`deste-alani-${pozisyonMap[oyuncuPozisyonu]}`);
-            if(desteAlani){
-                const sonTas = atilanlar.slice(-1)[0];
-                desteAlani.appendChild(tasiElementeCevir(sonTas, false));
-            }
+        const oyuncuPozisyonu = (index - benimIndexim + 4) % 4;
+        const desteAlani = document.getElementById(`deste-alani-${pozisyonMap[oyuncuPozisyonu]}`);
+        if(desteAlani && atilanlar && atilanlar.length > 0){
+            const sonTas = atilanlar.slice(-1)[0];
+            desteAlani.appendChild(tasiElementeCevir(sonTas, false));
         }
     });
     const oncekiOyuncuIndex = (gameState.oyuncular.indexOf(gameState.siraKimde) + 3) % 4;
@@ -321,7 +333,11 @@ function tasiElementeCevir(tas, tıklanabilir) {
                 const benimIndexim = mevcutOyunDurumu.oyuncular.indexOf(currentUser.username);
                 const hedefEl = document.getElementById(`deste-alani-${['benim', 'sag', 'ust', 'sol'][benimIndexim]}`);
                 tasAnimasyonu(tas, el, hedefEl);
-                setTimeout(() => socket.emit('tasAt', { tasId: tas.id }), 50);
+                setTimeout(() => {
+                    benimElim = benimElim.filter(t => t.id !== tas.id);
+                    istakayiCiz(false);
+                    socket.emit('tasAt', { tasId: tas.id });
+                }, 50);
             }
         });
     }
