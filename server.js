@@ -150,12 +150,11 @@ io.on('connection', (socket) => {
             if (elGecerliMi) {
                 if(oda.oyun.turnTimer) clearTimeout(oda.oyun.turnTimer);
                 oda.oyun.oyunBittiMi = true;
-                let puan = data.ciftMi ? 40 : 20; // XP puanları
+                let puan = data.ciftMi ? 40 : 20;
                 if (data.okeyMiAtti) puan *= 2;
                 
-                try { // Puan ve XP'yi veritabanına kaydet
-                    await dbPool.query('UPDATE kullanicilar SET skor = skor + 1, xp = xp + $1 WHERE id = $2', [puan, oyuncu.id]);
-                    // Seviye atlama mantığı eklenebilir
+                try {
+                    await dbPool.query('UPDATE kullanicilar SET skor = skor + 1, xp = xp + $1, para = para + $2 WHERE id = $3', [puan, puan / 2, oyuncu.id]);
                 } catch (error) { console.error('Puan kaydedilemedi:', error); }
 
                 io.to(oda.adi).emit('oyunBitti', { kazanan: oyuncu.username, kazananEl: data.el, mesaj: `Oyunu ${data.ciftMi ? 'çifte biterek' : (data.okeyMiAtti ? 'okey atarak' : 'normal')} bitirdi! (+${puan} XP)` });
@@ -244,11 +243,11 @@ function siraZamanlayicisiniYenidenBaslat(oda) {
         
         setTimeout(() => {
             const guncelEli = oda.oyun.eller[siradakiOyuncu];
-            if (guncelEli.length % 3 !== 0) { // Hata durumu
+            if (guncelEli.length % 3 !== 0) {
                  siraZamanlayicisiniYenidenBaslat(oda); 
                  return;
             }
-            const atilacakTas = guncelEli[guncelEli.length - 1]; // Basitçe en sondakini at
+            const atilacakTas = guncelEli[guncelEli.length - 1]; // En sondakini at
             oda.oyun.tasAt(siradakiOyuncu, atilacakTas.id);
 
             io.to(oda.adi).emit('oyunDurumuGuncelle', oda.oyun.getGameState());
